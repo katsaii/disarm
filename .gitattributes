@@ -1,0 +1,4 @@
+*.yy    text eol=crlf
+*.yyp   text eol=crlf
+*.gml   text eol=crlf
+*.yy    linguist-language=Json
