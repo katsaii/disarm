@@ -3,7 +3,13 @@
  * Kat @katsaii
  */
 
+#macro DISARM_TYPE_SPRITE "sprite"
 #macro DISARM_TYPE_BONE "bone"
+#macro DISARM_TYPE_BOX "box"
+#macro DISARM_TYPE_POINT "bone"
+#macro DISARM_TYPE_SOUND "bone"
+#macro DISARM_TYPE_ENTITY "bone"
+#macro DISARM_TYPE_VARIABLE "bone"
 #macro DISARM_TYPE_UNKNOWN "unknown"
 
 /// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
@@ -33,13 +39,19 @@ function disarm_import_from_struct(_struct) {
     if not (is_struct(_struct)) {
         return undefined;
     }
-    return {
-        version : __disarm_struct_get_or_default(_struct, "scon_version", "1.0", is_string),
+    var arm = {
+        version : __disarm_struct_get_or_default(_struct, "scon_version", undefined, is_string),
         entities : __disarm_array_map(
                 __disarm_struct_get_or_default(_struct, "entity", [], is_array),
                 __disarm_import_entity),
         currentEntity : 0,
     };
+    if (arm.version != "1.0") {
+        show_debug_message(
+                "Warning: Disarm currently only supports version 1.0 of the Spriter format, " +
+                "the animation was loaded correctly but may be unstable");
+    }
+    return arm;
 }
 
 /// @desc Creates a new Disarm entity instance.
@@ -51,6 +63,9 @@ function __disarm_import_entity(_struct) {
         objs : __disarm_array_map(
                 __disarm_struct_get_or_default(_struct, "obj_info", [], is_array),
                 __disarm_import_entity_object),
+        anims : __disarm_array_map(
+                __disarm_struct_get_or_default(_struct, "animation", [], is_array),
+                __disarm_import_entity_animation),
     };
 }
 
@@ -62,6 +77,41 @@ function __disarm_import_entity_object(_struct) {
         height : __disarm_struct_get_or_default(_struct, "h", 1, is_numeric),
         name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
         type : __disarm_struct_get_or_default(_struct, "type", DISARM_TYPE_UNKNOWN, is_string),
+    };
+}
+
+/// @desc Creates a new Disarm entity animation definition.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation(_struct) {
+    var mainline = __disarm_struct_get_or_default(_struct, "mainline", { }, is_struct);
+    return {
+        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
+        name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
+        dt : __disarm_struct_get_or_default(_struct, "interval", -1, is_numeric),
+        duration  : __disarm_struct_get_or_default(_struct, "length", -1, is_numeric),
+        mainline : __disarm_array_map(
+                __disarm_struct_get_or_default(mainline, "key", [], is_array),
+                __disarm_import_entity_animation_mainline_keyframe)
+    };
+}
+
+/// @desc Creates a new Disarm entity animation definition for the main timeline.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_mainline_keyframe(_struct) {
+    return {
+        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
+        time : __disarm_struct_get_or_default(_struct, "time", 0, is_numeric),
+        objs : [],
+        bones : __disarm_array_map(
+                __disarm_struct_get_or_default(_struct, "bone_ref", [], is_array),
+                function(_struct) {
+                    return {
+                        idx : __disarm_struct_get_or_default(_struct, "id", 0, is_numeric),
+                        idxParent : __disarm_struct_get_or_default(_struct, "parent", -1, is_numeric),
+                        key : __disarm_struct_get_or_default(_struct, "key", 0, is_numeric),
+                        timeline : __disarm_struct_get_or_default(_struct, "timeline", 0, is_numeric),
+                    };
+                })
     };
 }
 
