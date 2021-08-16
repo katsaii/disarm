@@ -6,10 +6,10 @@
 #macro DISARM_TYPE_SPRITE "sprite"
 #macro DISARM_TYPE_BONE "bone"
 #macro DISARM_TYPE_BOX "box"
-#macro DISARM_TYPE_POINT "bone"
-#macro DISARM_TYPE_SOUND "bone"
-#macro DISARM_TYPE_ENTITY "bone"
-#macro DISARM_TYPE_VARIABLE "bone"
+#macro DISARM_TYPE_POINT "point"
+#macro DISARM_TYPE_SOUND "sound"
+#macro DISARM_TYPE_ENTITY "entity"
+#macro DISARM_TYPE_VARIABLE "variable"
 #macro DISARM_TYPE_UNKNOWN "unknown"
 
 /// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
@@ -83,19 +83,28 @@ function __disarm_import_entity_object(_struct) {
 /// @desc Creates a new Disarm entity animation definition.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation(_struct) {
-    var mainline = __disarm_struct_get_or_default(_struct, "mainline", { }, is_struct);
     return {
         idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
         name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
         dt : __disarm_struct_get_or_default(_struct, "interval", -1, is_numeric),
         duration  : __disarm_struct_get_or_default(_struct, "length", -1, is_numeric),
-        mainline : __disarm_array_map(
-                __disarm_struct_get_or_default(mainline, "key", [], is_array),
-                __disarm_import_entity_animation_mainline_keyframe)
+        mainline : __disarm_import_entity_animation_mainline(
+                __disarm_struct_get_or_default(_struct, "mainline", { }, is_struct)),
+        timelines :  __disarm_array_map(
+                __disarm_struct_get_or_default(_struct, "timeline", [], is_array),
+                __disarm_import_entity_animation_timeline),
     };
 }
 
 /// @desc Creates a new Disarm entity animation definition for the main timeline.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_mainline(_struct) {
+    return __disarm_array_map(
+            __disarm_struct_get_or_default(_struct, "key", [], is_array),
+            __disarm_import_entity_animation_mainline_keyframe);
+}
+
+/// @desc Creates a new Disarm entity animation definition for the main timeline keyframes.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_mainline_keyframe(_struct) {
     return {
@@ -106,13 +115,61 @@ function __disarm_import_entity_animation_mainline_keyframe(_struct) {
                 __disarm_struct_get_or_default(_struct, "bone_ref", [], is_array),
                 function(_struct) {
                     return {
-                        idx : __disarm_struct_get_or_default(_struct, "id", 0, is_numeric),
+                        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
                         idxParent : __disarm_struct_get_or_default(_struct, "parent", -1, is_numeric),
-                        key : __disarm_struct_get_or_default(_struct, "key", 0, is_numeric),
-                        timeline : __disarm_struct_get_or_default(_struct, "timeline", 0, is_numeric),
+                        key : __disarm_struct_get_or_default(_struct, "key", -1, is_numeric),
+                        timeline : __disarm_struct_get_or_default(_struct, "timeline", -1, is_numeric),
                     };
-                })
+                }),
     };
+}
+
+/// @desc Creates a new Disarm entity animation definition for a timeline.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_timeline(_struct) {
+    var type = __disarm_struct_get_or_default(_struct, "object_type", DISARM_TYPE_UNKNOWN, is_string);
+    var f = __disarm_import_entity_animation_timeline_keyframe;
+    switch (type) {
+    case DISARM_TYPE_SPRITE: break;
+    case DISARM_TYPE_BONE: f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
+    case DISARM_TYPE_BOX: break;
+    case DISARM_TYPE_POINT: break;
+    case DISARM_TYPE_SOUND: break;
+    case DISARM_TYPE_ENTITY: break;
+    case DISARM_TYPE_VARIABLE: break;
+    }
+    return {
+        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
+        name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
+        obj : __disarm_struct_get_or_default(_struct, "obj", -1, is_numeric),
+        type : type,
+        keys : __disarm_array_map(
+                __disarm_struct_get_or_default(_struct, "key", [], is_array),
+                f),
+    }
+}
+
+/// @desc Creates a new Disarm entity animation definition for a timeline keyframes.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_timeline_keyframe(_struct) {
+    return {
+        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
+        time : __disarm_struct_get_or_default(_struct, "time", 0, is_numeric),
+        spin : __disarm_struct_get_or_default(_struct, "spin", 1, is_numeric),
+    };
+}
+
+/// @desc Creates a new Disarm entity animation definition for a timeline keyframes.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
+    var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
+    var bone = __disarm_struct_get_or_default(_struct, DISARM_TYPE_BONE, { }, is_struct);
+    key.angle = __disarm_struct_get_or_default(bone, "angle", 0, is_numeric);
+    key.scaleX = __disarm_struct_get_or_default(bone, "scale_x", 1, is_numeric);
+    key.scaleY = __disarm_struct_get_or_default(bone, "scale_y", 1, is_numeric);
+    key.posX = __disarm_struct_get_or_default(bone, "x", 0, is_numeric);
+    key.posY = __disarm_struct_get_or_default(bone, "y", 0, is_numeric);
+    return key;
 }
 
 /// @desc Attempts to get a value from a struct with a specific type, and returns a default value if it doesn't exist or the type is wrong.
