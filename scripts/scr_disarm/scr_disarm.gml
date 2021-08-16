@@ -104,6 +104,9 @@ function __disarm_import_entity_object_bone(_struct) {
         scaleY : 1,
         posX : 0,
         posY : 0,
+        idxParent : -1,
+        invalidWorldTransform : true,
+        active : false,
     };
 }
 
