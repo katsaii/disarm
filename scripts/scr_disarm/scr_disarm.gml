@@ -219,8 +219,8 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
 
 /// @desc Resets the state of armature objects.
 /// @param {struct} arm The disarm instance to update.
-function disarm_begin(_disarm) {
-    var objs = _disarm.entities[_disarm.currentEntity].objs;
+function disarm_begin(_arm) {
+    var objs = _arm.entities[_arm.currentEntity].objs;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         var obj = objs[i];
         obj.active = false;
@@ -238,10 +238,19 @@ function disarm_begin(_disarm) {
     }
 }
 
+/// @desc Adds an animation to the armature pose.
+/// @param {struct} arm The disarm instance to update.
+/// @param {real} anim The ID of the animation to play.
+/// @param {real} amount The progress, as a number between 0 and 1, of the animation.
+/// @param {real} [blend_mode] The blend mode to use when applying the animation.
+function disarm_add_animation(_arm, _anim, _amount, _blend_mode="overlay") {
+    // TODO
+}
+
 /// @desc Updates the world transformation of armature objects.
-/// @param {struct} arm The disarm instance to render.
-function disarm_end(_disarm) {
-    var objs = _disarm.entities[_disarm.currentEntity].objs;
+/// @param {struct} arm The disarm instance to update.
+function disarm_end(_arm) {
+    var objs = _arm.entities[_arm.currentEntity].objs;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(objs, i);
     }
@@ -283,8 +292,8 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
 /// @desc Renders a debug view of the armature.
 /// @param {struct} disarm The disarm instance to render.
 /// @param {matrix} transform The global transformation to apply to this armature.
-function disarm_draw_debug(_disarm, _matrix=undefined) {
-    var objs = _disarm.entities[_disarm.currentEntity].objs;
+function disarm_draw_debug(_arm, _matrix=undefined) {
+    var objs = _arm.entities[_arm.currentEntity].objs;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
     if (_matrix != undefined) {
