@@ -55,15 +55,15 @@ function disarm_import_from_struct(_struct) {
                 "Warning: Disarm currently only supports version 1.0 of the Spriter format, " +
                 "the animation was loaded correctly but may be unstable");
     }
-    disarm_begin(arm); // this actually just initialises the default values of the objects
-    //disarm_end(arm); // this isn't needed, but here it is as a sanity check!
+    disarm_animation_begin(arm); // this actually just initialises the default values of the objects
+    //disarm_animation_end(arm); // this isn't needed, but here it is as a sanity check!
     return arm;
 }
 
 /// @desc Creates a new Disarm entity instance.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity(_struct) {
-    return {
+    var entity = {
         idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
         name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
         objs : __disarm_array_map(
@@ -72,7 +72,14 @@ function __disarm_import_entity(_struct) {
         anims : __disarm_array_map(
                 __disarm_struct_get_or_default(_struct, "animation", [], is_array),
                 __disarm_import_entity_animation),
+        animTable : { }
     };
+    var anims = entity.anims;
+    var anim_table = entity.animTable;
+    for (var i = array_length(anims) - 1; i >= 0; i -= 1) {
+        anim_table[$ anims[i].name] = i;
+    }
+    return entity;
 }
 
 /// @desc Creates a new Disarm entity object definition.
@@ -219,7 +226,7 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
 
 /// @desc Resets the state of armature objects.
 /// @param {struct} arm The Disarm instance to update.
-function disarm_begin(_arm) {
+function disarm_animation_begin(_arm) {
     var objs = _arm.entities[_arm.currentEntity].objs;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         var obj = objs[i];
@@ -240,22 +247,30 @@ function disarm_begin(_arm) {
 
 /// @desc Adds an animation to the armature pose.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} anim The ID of the animation to play.
+/// @param {real} anim The name of the animation to play.
+function disarm_animation_exists(_arm, _anim) {
+    return variable_struct_exists(_arm.entities[_arm.currentEntity].animTable, _anim);
+}
+
+/// @desc Adds an animation to the armature pose.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} anim The name of the animation to play.
 /// @param {real} amount The progress, as a number between 0 and 1, of the animation.
 /// @param {real} [blend_mode] The blend mode to use when applying the animation.
-function disarm_add_animation(_arm, _idx_anim, _amount, _blend_mode="overlay") {
+function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var entity = _arm.entities[_arm.currentEntity];
     var obj = entity.objs;
-    var anim = entity.anims[_idx_anim];
+    var anim = entity.anims[entity.animTable[$ _anim]];
     var mainline = anim.mainline;
     var timelines = anim.timelines;
     var time_progress = anim.looping ? (1 + (_amount % 1)) % 1 : clamp(_amount, 0, 1);
     var time = lerp(0, anim.duration, time_progress);
+    show_message([anim, time]);
 }
 
 /// @desc Updates the world transformation of armature objects.
 /// @param {struct} arm The Disarm instance to update.
-function disarm_end(_arm) {
+function disarm_animation_end(_arm) {
     var objs = _arm.entities[_arm.currentEntity].objs;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(objs, i);
