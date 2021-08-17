@@ -243,8 +243,14 @@ function disarm_begin(_arm) {
 /// @param {real} anim The ID of the animation to play.
 /// @param {real} amount The progress, as a number between 0 and 1, of the animation.
 /// @param {real} [blend_mode] The blend mode to use when applying the animation.
-function disarm_add_animation(_arm, _anim, _amount, _blend_mode="overlay") {
-    
+function disarm_add_animation(_arm, _idx_anim, _amount, _blend_mode="overlay") {
+    var entity = _arm.entities[_arm.currentEntity];
+    var obj = entity.objs;
+    var anim = entity.anims[_idx_anim];
+    var mainline = anim.mainline;
+    var timelines = anim.timelines;
+    var time_progress = anim.looping ? (1 + (_amount % 1)) % 1 : clamp(_amount, 0, 1);
+    var time = lerp(0, anim.duration, time_progress);
 }
 
 /// @desc Updates the world transformation of armature objects.
