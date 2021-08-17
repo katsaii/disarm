@@ -359,3 +359,17 @@ function __disarm_array_map(_in, _f) {
     }
     return out;
 }
+
+/// @desc Performs a linear search and returns the ID of the first structure where the `name` field
+///       equals the expected name, or `-1` if none exist.
+/// @param {array} values The array of structs to search.
+/// @param {string} name The name to search for.
+function __disarm_find_struct_with_name_in_array(_values, _expected_name) {
+    var n = array_length(_values);
+    for (var i = 0; i < n; i += 1) {
+        if (_values[i].name == _expected_name) {
+            return i;
+        }
+    }
+    return -1;
+}
