@@ -55,6 +55,8 @@ function disarm_import_from_struct(_struct) {
                 "Warning: Disarm currently only supports version 1.0 of the Spriter format, " +
                 "the animation was loaded correctly but may be unstable");
     }
+    disarm_begin(arm); // this actually just initialises the default values of the objects
+    //disarm_end(arm); // this isn't needed, but here it is as a sanity check!
     return arm;
 }
 
@@ -100,12 +102,12 @@ function __disarm_import_entity_object_bone(_struct) {
     return {
         width : __disarm_struct_get_or_default(_struct, "w", 1, is_numeric),
         height : __disarm_struct_get_or_default(_struct, "h", 1, is_numeric),
-        angle : 0,
-        scaleX : 1,
-        scaleY : 1,
-        posX : 0,
-        posY : 0,
-        idxParent : -1,
+        angle : undefined,
+        scaleX : undefined,
+        scaleY : undefined,
+        posX : undefined,
+        posY : undefined,
+        idxParent : undefined,
         invalidWorldTransform : true,
     };
 }
@@ -215,9 +217,30 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     return key;
 }
 
+/// @desc Resets the state of armature objects.
+/// @param {struct} arm The disarm instance to update.
+function disarm_begin(_disarm) {
+    var objs = _disarm.entities[_disarm.currentEntity].objs;
+    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
+        var obj = objs[i];
+        obj.active = false;
+        switch (obj.type) {
+        case __DISARM_TYPE_BONE:
+            obj.invalidWorldTransform = true;
+            obj.angle = 0;
+            obj.scaleX = 1;
+            obj.scaleY = 1;
+            obj.posX = 0;
+            obj.posY = 0;
+            obj.idxParent = -1;
+            break;
+        }
+    }
+}
+
 /// @desc Updates the world transformation of armature objects.
-/// @param {struct} disarm The disarm instance to render.
-function disarm_update_world_transform(_disarm) {
+/// @param {struct} arm The disarm instance to render.
+function disarm_end(_disarm) {
     var objs = _disarm.entities[_disarm.currentEntity].objs;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(objs, i);
