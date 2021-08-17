@@ -218,7 +218,7 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
 }
 
 /// @desc Resets the state of armature objects.
-/// @param {struct} arm The disarm instance to update.
+/// @param {struct} arm The Disarm instance to update.
 function disarm_begin(_arm) {
     var objs = _arm.entities[_arm.currentEntity].objs;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
@@ -239,16 +239,16 @@ function disarm_begin(_arm) {
 }
 
 /// @desc Adds an animation to the armature pose.
-/// @param {struct} arm The disarm instance to update.
+/// @param {struct} arm The Disarm instance to update.
 /// @param {real} anim The ID of the animation to play.
 /// @param {real} amount The progress, as a number between 0 and 1, of the animation.
 /// @param {real} [blend_mode] The blend mode to use when applying the animation.
 function disarm_add_animation(_arm, _anim, _amount, _blend_mode="overlay") {
-    // TODO
+    
 }
 
 /// @desc Updates the world transformation of armature objects.
-/// @param {struct} arm The disarm instance to update.
+/// @param {struct} arm The Disarm instance to update.
 function disarm_end(_arm) {
     var objs = _arm.entities[_arm.currentEntity].objs;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
@@ -290,7 +290,7 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
 }
 
 /// @desc Renders a debug view of the armature.
-/// @param {struct} disarm The disarm instance to render.
+/// @param {struct} Disarm The Disarm instance to render.
 /// @param {matrix} transform The global transformation to apply to this armature.
 function disarm_draw_debug(_arm, _matrix=undefined) {
     var objs = _arm.entities[_arm.currentEntity].objs;
