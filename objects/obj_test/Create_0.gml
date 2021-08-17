@@ -130,3 +130,4 @@ arm = disarm_import_from_string(@'
 	"scon_version": "1.0"
 }
 ');
+show_debug_overlay(true);

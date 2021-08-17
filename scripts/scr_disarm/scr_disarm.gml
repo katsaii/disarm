@@ -263,11 +263,12 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var anim = entity.anims[entity.animTable[$ _anim]];
     var mainline = anim.mainline;
     var timelines = anim.timelines;
-    var time_progress = anim.looping ? (1 + (_amount % 1)) % 1 : clamp(_amount, 0, 1);
-    var time = lerp(0, anim.duration, time_progress);
+    var looping = anim.looping;
+    var time_progress = (1 + (_amount % 1)) % 1;
+    var time_duration = anim.duration;
+    var time = lerp(0, time_duration, time_progress);
     var idx_mainframe = __disarm_find_struct_with_time_in_array(mainline, time);
     if (idx_mainframe != -1) {
-        show_debug_message([time, idx_mainframe]);
         var mainframe = mainline[idx_mainframe];
         // apply bone animations
         var bone_refs = mainframe.bones;
@@ -275,15 +276,35 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         for (var i = 0; i < bone_ref_count; i += 1) {
             var bone_ref = bone_refs[i];
             var timeline = timelines[bone_ref.timeline];
-            var keyframe = timeline.keys[bone_ref.key];
+            var keys = timeline.keys;
+            var idx_key = bone_ref.key;
+            var key = keys[idx_key];
+            var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : undefined;
+            // get interpolation
+            var angle = key.angle;
+            var scale_x = key.scaleX;
+            var scale_y = key.scaleY;
+            var pos_x = key.posX;
+            var pos_y = key.posY;
+            var a = key.a;
+            if (key_next != undefined) {
+                var interp = (time - key.time) / key_next.time;
+                angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
+                scale_x = lerp(scale_x, key_next.scaleX, interp);
+                scale_y = lerp(scale_y, key_next.scaleY, interp);
+                pos_x = lerp(pos_x, key_next.posX, interp);
+                pos_y = lerp(pos_y, key_next.posY, interp);
+                a = lerp(pos_y, key_next.posY, interp);
+            }
+            // apply transformations
             var bone = objs[timeline.obj];
             bone.active = true; // enables the bone visibility
-            bone.angle = keyframe.angle;
-            bone.scaleX = keyframe.scaleX;
-            bone.scaleY = keyframe.scaleY;
-            bone.posX = keyframe.posX;
-            bone.posY = keyframe.posY;
-            bone.a = keyframe.a;
+            bone.angle = angle;
+            bone.scaleX = scale_x;
+            bone.scaleY = scale_y;
+            bone.posX = pos_x;
+            bone.posY = pos_y;
+            bone.a = a;
             bone.idxParent = bone_ref.idxParent;
         }
     }
@@ -432,4 +453,25 @@ function __disarm_find_struct_with_time_in_array(_values, _expected_time) {
         }
     }
     return -1;
+}
+
+/// @desc Interpolates between two angles in the direction of `spin`.
+/// @param {real} a The starting angle.
+/// @param {real} b The target angle.
+/// @param {real} spin The direction to rotate.
+/// @param {real} amount The interpolation amount.
+function __disarm_animation_lerp_angle(_a, _b, _spin, _amount) {
+    if (_spin == 0) {
+        return _a;
+    }
+    if (_spin > 0) {
+        if (_b - _a < 0) {
+            _b += 360;
+        }
+    } else if (_spin < 0) {
+        if (_b - _a > 0) {
+            _b -= 360;
+        }
+    }
+    return lerp(_a, _b, _amount);
 }
