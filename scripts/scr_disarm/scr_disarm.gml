@@ -109,12 +109,12 @@ function __disarm_import_entity_object_bone(_struct) {
     return {
         width : __disarm_struct_get_or_default(_struct, "w", 1, is_numeric),
         height : __disarm_struct_get_or_default(_struct, "h", 1, is_numeric),
-        angle : undefined,
-        scaleX : undefined,
-        scaleY : undefined,
-        posX : undefined,
-        posY : undefined,
-        idxParent : undefined,
+        angle : 0,
+        scaleX : 1,
+        scaleY : 1,
+        posX : 0,
+        posY : 0,
+        idxParent : -1,
         invalidWorldTransform : true,
     };
 }
@@ -265,7 +265,6 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var timelines = anim.timelines;
     var time_progress = anim.looping ? (1 + (_amount % 1)) % 1 : clamp(_amount, 0, 1);
     var time = lerp(0, anim.duration, time_progress);
-    show_message([anim, time]);
 }
 
 /// @desc Updates the world transformation of armature objects.
@@ -384,6 +383,30 @@ function __disarm_find_struct_with_name_in_array(_values, _expected_name) {
     for (var i = 0; i < n; i += 1) {
         if (_values[i].name == _expected_name) {
             return i;
+        }
+    }
+    return -1;
+}
+
+/// @desc Performs a binary search and returns the ID of the first structure where the `time` field
+///       is greater than the expected time, or `-1` if none exist.
+/// @param {array} values The array of structs to search.
+/// @param {string} time The time to search for.
+function __disarm_find_struct_with_time_in_array(_values, _expected_time) {
+    var n = array_length(_values);
+    var l = 0;
+    var r = n - 1;
+    while (r >= l) {
+        var mid = (l + r) div 2;
+        var t_start = _values[mid].time;
+        var t_end = mid + 1 < n ? _values[mid + 1].time : infinity;
+        if (_expected_time > t_start && _expected_time < t_end) {
+            return mid;
+        }
+        if (_expected_time < t_start) {
+            r = mid - 1;
+        } else {
+            l = mid + 1;
         }
     }
     return -1;
