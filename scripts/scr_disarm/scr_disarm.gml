@@ -90,7 +90,7 @@ function __disarm_import_entity_object(_struct) {
     var obj = f == undefined ? { } : f(_struct);
     obj.name = __disarm_struct_get_or_default(_struct, "name", "", is_string);
     obj.type = type;
-    obj.active = false;
+    obj.active = true;
     return obj;
 }
 
@@ -215,7 +215,49 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     return key;
 }
 
-/// @desc Rendersa debug view of the armature.
+/// @desc Updates the world transformation of armature objects.
+/// @param {struct} disarm The disarm instance to render.
+function disarm_update_world_transform(_disarm) {
+    var objs = _disarm.entities[_disarm.currentEntity].objs;
+    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
+        __disarm_update_world_transform_using_object_array(objs, i);
+    }
+}
+
+/// @desc Updates the world transformation of a specific armature object using this array of objects.
+/// @param {array} objs The object array.
+/// @param {real} id The object index.
+function __disarm_update_world_transform_using_object_array(_objs, _idx) {
+    var obj = _objs[_idx];
+    if (obj.invalidWorldTransform && obj.active) {
+        obj.invalidWorldTransform = false;
+        switch (obj.type) {
+        case __DISARM_TYPE_BONE:
+            var idx_par = obj.idxParent;
+            if (idx_par != -1) {
+                var par = __disarm_update_world_transform_using_object_array(_objs, idx_par);
+                var par_x = par.posX;
+                var par_y = par.posY;
+                var par_scale_x = par.scaleX;
+                var par_scale_y = par.scaleY;
+                var par_dir = par.angle;
+                obj.angle += par_dir;
+                var obj_x = obj.posX;
+                var obj_y = obj.posY;
+                obj.posX = par_x +
+                        lengthdir_x(obj_x * par_scale_x, par_dir) +
+                        lengthdir_y(obj_y * par_scale_y, par_dir);
+                obj.posY = par_y +
+                        lengthdir_y(obj_x * par_scale_x, par_dir) +
+                        lengthdir_x(obj_y * par_scale_y, par_dir);
+            }
+            break;
+        }
+    }
+    return obj;
+}
+
+/// @desc Renders a debug view of the armature.
 /// @param {struct} disarm The disarm instance to render.
 /// @param {matrix} transform The global transformation to apply to this armature.
 function disarm_draw_debug(_disarm, _matrix=undefined) {

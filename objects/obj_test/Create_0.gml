@@ -130,3 +130,4 @@ arm = disarm_import_from_string(@'
 	"scon_version": "1.0"
 }
 ');
+disarm_update_world_transform(arm);
