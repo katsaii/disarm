@@ -130,8 +130,3 @@ arm = disarm_import_from_string(@'
 	"scon_version": "1.0"
 }
 ');
-disarm_animation_begin(arm);
-if (disarm_animation_exists(arm, "NewAnimation")) {
-    disarm_animation_add(arm, "NewAnimation", -0.5);
-}
-disarm_animation_end(arm);

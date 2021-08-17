@@ -259,12 +259,34 @@ function disarm_animation_exists(_arm, _anim) {
 /// @param {real} [blend_mode] The blend mode to use when applying the animation.
 function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var entity = _arm.entities[_arm.currentEntity];
-    var obj = entity.objs;
+    var objs = entity.objs;
     var anim = entity.anims[entity.animTable[$ _anim]];
     var mainline = anim.mainline;
     var timelines = anim.timelines;
     var time_progress = anim.looping ? (1 + (_amount % 1)) % 1 : clamp(_amount, 0, 1);
     var time = lerp(0, anim.duration, time_progress);
+    var idx_mainframe = __disarm_find_struct_with_time_in_array(mainline, time);
+    if (idx_mainframe != -1) {
+        show_debug_message([time, idx_mainframe]);
+        var mainframe = mainline[idx_mainframe];
+        // apply bone animations
+        var bone_refs = mainframe.bones;
+        var bone_ref_count = array_length(bone_refs);
+        for (var i = 0; i < bone_ref_count; i += 1) {
+            var bone_ref = bone_refs[i];
+            var timeline = timelines[bone_ref.timeline];
+            var keyframe = timeline.keys[bone_ref.key];
+            var bone = objs[timeline.obj];
+            bone.active = true; // enables the bone visibility
+            bone.angle = keyframe.angle;
+            bone.scaleX = keyframe.scaleX;
+            bone.scaleY = keyframe.scaleY;
+            bone.posX = keyframe.posX;
+            bone.posY = keyframe.posY;
+            bone.a = keyframe.a;
+            bone.idxParent = bone_ref.idxParent;
+        }
+    }
 }
 
 /// @desc Updates the world transformation of armature objects.
@@ -400,7 +422,7 @@ function __disarm_find_struct_with_time_in_array(_values, _expected_time) {
         var mid = (l + r) div 2;
         var t_start = _values[mid].time;
         var t_end = mid + 1 < n ? _values[mid + 1].time : infinity;
-        if (_expected_time > t_start && _expected_time < t_end) {
+        if (_expected_time >= t_start && _expected_time < t_end) {
             return mid;
         }
         if (_expected_time < t_start) {
