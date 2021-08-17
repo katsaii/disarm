@@ -287,8 +287,15 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             var pos_x = key.posX;
             var pos_y = key.posY;
             var a = key.a;
-            if (key_next != undefined) {
-                var interp = (time - key.time) / key_next.time;
+            if (looping || key_next != undefined) {
+                var interp;
+                var time_key = key.time;
+                if (looping && key_next == undefined) {
+                    key_next = keys[0];
+                    interp = (time - time_key) / (time_duration - time_key);
+                } else {
+                    interp = (time - time_key) / key_next.time;
+                }
                 angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
                 scale_x = lerp(scale_x, key_next.scaleX, interp);
                 scale_y = lerp(scale_y, key_next.scaleY, interp);
