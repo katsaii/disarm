@@ -1,0 +1,1 @@
+disarm_draw_debug(arm, matrix_build(x, y, 0, 0, 0, image_angle, image_xscale, image_yscale, 1));

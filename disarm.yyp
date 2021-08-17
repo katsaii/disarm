@@ -1,5 +1,6 @@
 {
   "resources": [
+    {"id":{"name":"obj_test","path":"objects/obj_test/obj_test.yy",},"order":1,},
     {"id":{"name":"scr_disarm","path":"scripts/scr_disarm/scr_disarm.yy",},"order":0,},
     {"id":{"name":"rm_test","path":"rooms/rm_test/rm_test.yy",},"order":0,},
   ],
@@ -20,7 +21,7 @@
     {"roomId":{"name":"rm_test","path":"rooms/rm_test/rm_test.yy",},},
   ],
   "Folders": [
-    {"folderPath":"folders/Rooms.yy","order":12,"resourceVersion":"1.0","name":"Rooms","tags":[],"resourceType":"GMFolder",},
+    {"folderPath":"folders/Test.yy","order":12,"resourceVersion":"1.0","name":"Test","tags":[],"resourceType":"GMFolder",},
     {"folderPath":"folders/Disarm.yy","order":13,"resourceVersion":"1.0","name":"Disarm","tags":[],"resourceType":"GMFolder",},
   ],
   "AudioGroups": [

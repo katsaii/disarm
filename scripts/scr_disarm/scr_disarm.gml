@@ -90,6 +90,7 @@ function __disarm_import_entity_object(_struct) {
     var obj = f == undefined ? { } : f(_struct);
     obj.name = __disarm_struct_get_or_default(_struct, "name", "", is_string);
     obj.type = type;
+    obj.active = false;
     return obj;
 }
 
@@ -106,7 +107,6 @@ function __disarm_import_entity_object_bone(_struct) {
         posY : 0,
         idxParent : -1,
         invalidWorldTransform : true,
-        active : false,
     };
 }
 
@@ -215,6 +215,44 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     return key;
 }
 
+/// @desc Rendersa debug view of the armature.
+/// @param {struct} disarm The disarm instance to render.
+/// @param {matrix} transform The global transformation to apply to this armature.
+function disarm_draw_debug(_disarm, _matrix=undefined) {
+    var objs = _disarm.entities[_disarm.currentEntity].objs;
+    var default_colour = draw_get_color();
+    var default_alpha = draw_get_alpha();
+    if (_matrix != undefined) {
+        var default_matrix = matrix_get(matrix_world);
+        matrix_set(matrix_world, _matrix);
+        _matrix = default_matrix;
+    }
+    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
+        var obj = objs[i];
+        if not (obj.active) {
+            continue;
+        }
+        switch (obj.type) {
+        case __DISARM_TYPE_BONE:
+            var len = obj.width * obj.scaleX;
+            var wid = obj.height * obj.scaleY;
+            var dir = obj.angle;
+            var x1 = obj.posX;
+            var y1 = obj.posY;
+            var x2 = x1 + lengthdir_x(len, dir);
+            var y2 = y1 + lengthdir_y(len, dir);
+            draw_set_colour(obj.invalidWorldTransform ? c_red : c_yellow);
+            draw_arrow(x1, y1, x2, y2, wid);
+            break;
+        }
+    }
+    if (_matrix != undefined) {
+        matrix_set(matrix_world, _matrix);
+    }
+    draw_set_colour(default_colour);
+    draw_set_alpha(default_alpha);
+}
+
 /// @desc Attempts to get a value from a struct with a specific type, and returns a default value if it doesn't exist or the type is wrong.
 /// @param {struct} struct The struct to check.
 /// @param {string} key The key to check.
@@ -241,137 +279,3 @@ function __disarm_array_map(_in, _f) {
     }
     return out;
 }
-
-var disarm = disarm_import_from_string(@'
-{
-	"entity": [
-		{
-			"animation": [
-				{
-					"id": 0,
-					"interval": 100,
-					"length": 1000,
-					"mainline": {
-						"key": [
-							{
-								"bone_ref": [
-									{
-										"id": 0,
-										"key": 0,
-										"timeline": 0
-									},
-									{
-										"id": 1,
-										"key": 0,
-										"parent": 0,
-										"timeline": 1
-									}
-								],
-								"id": 0,
-								"object_ref": []
-							},
-							{
-								"bone_ref": [
-									{
-										"id": 0,
-										"key": 1,
-										"timeline": 0
-									},
-									{
-										"id": 1,
-										"key": 1,
-										"parent": 0,
-										"timeline": 1
-									}
-								],
-								"id": 1,
-								"object_ref": [],
-								"time": 798
-							}
-						]
-					},
-					"name": "NewAnimation",
-					"timeline": [
-						{
-							"id": 0,
-							"key": [
-								{
-									"bone": {
-										"angle": 22.833654177917538,
-										"x": 1.647482014388494,
-										"y": 0.1726618705035987
-									},
-									"id": 0
-								},
-								{
-									"bone": {
-										"angle": 73.83148691577918,
-										"x": 1.647482014388494,
-										"y": 0.1726618705035987
-									},
-									"id": 1,
-									"spin": -1,
-									"time": 798
-								}
-							],
-							"name": "bone_000",
-							"obj": 0,
-							"object_type": "bone"
-						},
-						{
-							"id": 1,
-							"key": [
-								{
-									"bone": {
-										"angle": 99.17172903016598,
-										"scale_x": 0.9999999999999999,
-										"x": 142.74948945393854,
-										"y": 2.15525182766096
-									},
-									"id": 0,
-									"spin": -1
-								},
-								{
-									"bone": {
-										"angle": 34.222081318590426,
-										"scale_x": 0.9999999999999999,
-										"x": 142.7494894539386,
-										"y": 2.155251827660961
-									},
-									"id": 1,
-									"time": 798
-								}
-							],
-							"name": "bone_001",
-							"obj": 1,
-							"object_type": "bone"
-						}
-					]
-				}
-			],
-			"character_map": [],
-			"id": 0,
-			"name": "entity_000",
-			"obj_info": [
-				{
-					"h": 10,
-					"name": "bone_000",
-					"type": "bone",
-					"w": 141.0319112825179
-				},
-				{
-					"h": 10,
-					"name": "bone_001",
-					"type": "bone",
-					"w": 128.95369892739242
-				}
-			]
-		}
-	],
-	"folder": [],
-	"generator": "BrashMonkey Spriter",
-	"generator_version": "r11",
-	"scon_version": "1.0"
-}
-');
-clipboard_set_text(disarm);
