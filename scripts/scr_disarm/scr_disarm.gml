@@ -268,6 +268,13 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var time_duration = anim.duration;
     var time = lerp(0, time_duration, time_progress);
     var idx_mainframe = __disarm_find_struct_with_time_in_array(mainline, time);
+    if (idx_mainframe == -1) {
+        if (looping) {
+            idx_mainframe = array_length(mainline) - 1; // last frame
+        } else {
+            idx_mainframe = 0; // first frame
+        }
+    }
     var mainframe = mainline[idx_mainframe];
     // apply bone animations
     var bone_refs = mainframe.bones;
@@ -286,16 +293,22 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var pos_x = key.posX;
         var pos_y = key.posY;
         var a = key.a;
-        if (looping || key_next != undefined) {
-            var interp;
+        if (looping && key_next == undefined) {
+            key_next = keys[0];
+        }
+        if (key_next != undefined) {
+            var time_mid = time;
             var time_key = key.time;
-            if (looping && key_next == undefined) {
-                key_next = keys[0];
-                interp = (time - time_key) / (time_duration - time_key);
-            } else {
-                interp = (time - time_key) / (key_next.time - time_key);
+            var time_key_end = key_next.time;
+            if (looping) {
+                if (time_mid < time_key) {
+                    time_mid += time_duration;
+                }
+                if (time_key_end < time_key) {
+                    time_key_end += time_duration;
+                }
             }
-            interp = clamp(interp, 0, 1);
+            var interp = clamp((time_mid - time_key) / (time_key_end - time_key), 0, 1);
             angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
             scale_x = lerp(scale_x, key_next.scaleX, interp);
             scale_y = lerp(scale_y, key_next.scaleY, interp);
@@ -458,7 +471,7 @@ function __disarm_find_struct_with_time_in_array(_values, _expected_time) {
             l = mid + 1;
         }
     }
-    return 0;
+    return -1;
 }
 
 /// @desc Interpolates between two angles in the direction of `spin`.
