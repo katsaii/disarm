@@ -128,7 +128,7 @@ function __disarm_import_entity_animation(_struct) {
         time : 0,
         dt : __disarm_struct_get_or_default(_struct, "interval", -1, is_numeric),
         duration : __disarm_struct_get_or_default(_struct, "length", -1, is_numeric),
-        looping : __disarm_struct_get_or_default(_struct, "looping", false, is_numeric),
+        looping : __disarm_struct_get_or_default(_struct, "looping", true, is_numeric),
         mainline : __disarm_import_entity_animation_mainline(
                 __disarm_struct_get_or_default(_struct, "mainline", { }, is_struct)),
         timelines :  __disarm_array_map(
