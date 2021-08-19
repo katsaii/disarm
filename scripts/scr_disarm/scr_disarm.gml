@@ -141,6 +141,8 @@ function __disarm_import_entity_object(_struct) {
     obj.name = __disarm_struct_get_or_default(_struct, "name", "", is_string);
     obj.type = type;
     obj.active = true;
+    obj.slots = [];
+    obj.slotCount = 0;
     return obj;
 }
 
@@ -266,6 +268,7 @@ function disarm_animation_begin(_arm) {
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         var obj = objs[i];
         obj.active = false;
+        obj.slotCount = 0;
         switch (obj.type) {
         case __DISARM_TYPE_BONE:
             obj.invalidWorldTransform = true;
