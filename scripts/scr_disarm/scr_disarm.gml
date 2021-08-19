@@ -49,14 +49,18 @@ function disarm_import_from_struct(_struct) {
                 __disarm_struct_get_or_default(_struct, "entity", [], is_array),
                 __disarm_import_entity),
         currentEntity : 0,
+        entityTable : { }
     };
+    var entities = arm.entities;
+    var entity_table = arm.entityTable;
+    for (var i = array_length(entities) - 1; i >= 0; i -= 1) {
+        entity_table[$ entities[i].name] = i;
+    }
     if (arm.version != "1.0") {
         show_debug_message(
                 "Warning: Disarm currently only supports version 1.0 of the Spriter format, " +
                 "the animation was loaded correctly but may be unstable");
     }
-    disarm_animation_begin(arm); // this actually just initialises the default values of the objects
-    //disarm_animation_end(arm); // this isn't needed, but here it is as a sanity check!
     return arm;
 }
 
@@ -238,9 +242,23 @@ function disarm_animation_begin(_arm) {
     }
 }
 
+/// @desc Returns whether an entity exists with this name.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} entity The name of the entity to check.
+function disarm_entity_exists(_arm, _entity) {
+    return variable_struct_exists(_arm.entityTable, _entity);
+}
+
 /// @desc Adds an animation to the armature pose.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} anim The name of the animation to play.
+/// @param {real} entity The name of the entity to set.
+function disarm_entity_set(_arm, _entity) {
+    _arm.currentEntity = _arm.entityTable[$ _entity];
+}
+
+/// @desc Returns whether an animation exists with this name.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} anim The name of the animation to check.
 function disarm_animation_exists(_arm, _anim) {
     return variable_struct_exists(_arm.entities[_arm.currentEntity].animTable, _anim);
 }
