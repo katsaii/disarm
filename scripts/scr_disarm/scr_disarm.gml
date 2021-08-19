@@ -286,14 +286,15 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var pos_x = key.posX;
         var pos_y = key.posY;
         var a = key.a;
-        if (looping && key_next == undefined) {
-            key_next = keys[0];
-        }
-        if (key_next != undefined) {
+        if (looping || key_next != undefined) {
+            if (key_next == undefined) {
+                key_next = keys[0];
+            }
             var time_mid = time;
             var time_key = key.time;
             var time_key_end = key_next.time;
             if (looping) {
+                // wrap around animation
                 if (time_mid < time_key) {
                     time_mid += time_duration;
                 }
