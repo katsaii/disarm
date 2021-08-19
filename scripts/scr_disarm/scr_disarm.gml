@@ -45,6 +45,12 @@ function disarm_import_from_struct(_struct) {
     }
     var arm = {
         version : __disarm_struct_get_or_default(_struct, "scon_version", undefined, is_string),
+        atlases : __disarm_array_map(
+                __disarm_struct_get_or_default(_struct, "atlas", [], is_array),
+                __disarm_import_atlas),
+        folders : __disarm_array_map(
+                __disarm_struct_get_or_default(_struct, "folder", [], is_array),
+                __disarm_import_folder),
         entities : __disarm_array_map(
                 __disarm_struct_get_or_default(_struct, "entity", [], is_array),
                 __disarm_import_entity),
@@ -64,6 +70,38 @@ function disarm_import_from_struct(_struct) {
     return arm;
 }
 
+/// @desc Creates a new Disarm atlas instance.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_atlas(_struct) {
+    return __disarm_struct_get_or_default(_struct, "name", undefined, is_string);
+}
+
+/// @desc Creates a new Disarm folder instance.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_folder(_struct) {
+    return {
+        name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
+        atlas : __disarm_struct_get_or_default(_struct, "atlas", -1, is_string),
+        files : __disarm_array_map(
+                __disarm_struct_get_or_default(_struct, "file", [], is_array),
+                function(_struct) {
+                    return {
+                        name : __disarm_struct_get_or_default(_struct, "name", undefined, is_string),
+                        width : __disarm_struct_get_or_default(_struct, "width", 1, is_numeric),
+                        height : __disarm_struct_get_or_default(_struct, "height", 1, is_numeric),
+                        aWidth : __disarm_struct_get_or_default(_struct, "aw", 1, is_numeric),
+                        aHeight : __disarm_struct_get_or_default(_struct, "ah", 1, is_numeric),
+                        aX : __disarm_struct_get_or_default(_struct, "ax", 0, is_numeric),
+                        aY : __disarm_struct_get_or_default(_struct, "ay", 0, is_numeric),
+                        aXOff : __disarm_struct_get_or_default(_struct, "axoff", 0, is_numeric),
+                        aYOff : __disarm_struct_get_or_default(_struct, "ayoff", 0, is_numeric),
+                        pivotX : __disarm_struct_get_or_default(_struct, "pivot_x", 0, is_numeric),
+                        pivotY : __disarm_struct_get_or_default(_struct, "pivot_y", 0, is_numeric),
+                    }
+                }),
+    };
+}
+
 /// @desc Creates a new Disarm entity instance.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity(_struct) {
@@ -75,7 +113,7 @@ function __disarm_import_entity(_struct) {
         anims : __disarm_array_map(
                 __disarm_struct_get_or_default(_struct, "animation", [], is_array),
                 __disarm_import_entity_animation),
-        animTable : { }
+        animTable : { },
     };
     var anims = entity.anims;
     var anim_table = entity.animTable;
