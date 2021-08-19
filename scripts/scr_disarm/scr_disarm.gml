@@ -64,7 +64,6 @@ function disarm_import_from_struct(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity(_struct) {
     var entity = {
-        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
         name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
         objs : __disarm_array_map(
                 __disarm_struct_get_or_default(_struct, "obj_info", [], is_array),
@@ -114,7 +113,7 @@ function __disarm_import_entity_object_bone(_struct) {
         scaleY : 1,
         posX : 0,
         posY : 0,
-        idxParent : -1,
+        objParent : -1,
         invalidWorldTransform : true,
     };
 }
@@ -123,7 +122,6 @@ function __disarm_import_entity_object_bone(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation(_struct) {
     return {
-        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
         name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
         time : 0,
         dt : __disarm_struct_get_or_default(_struct, "interval", -1, is_numeric),
@@ -149,14 +147,12 @@ function __disarm_import_entity_animation_mainline(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_mainline_keyframe(_struct) {
     return {
-        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
         time : __disarm_struct_get_or_default(_struct, "time", 0, is_numeric),
         objs : __disarm_array_map(
                 __disarm_struct_get_or_default(_struct, "object_ref", [], is_array),
                 function(_struct) {
                     return {
-                        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
-                        idxParent : __disarm_struct_get_or_default(_struct, "parent", -1, is_numeric),
+                        objParent : __disarm_struct_get_or_default(_struct, "parent", -1, is_numeric),
                         key : __disarm_struct_get_or_default(_struct, "key", -1, is_numeric),
                         timeline : __disarm_struct_get_or_default(_struct, "timeline", -1, is_numeric),
                         zIndex : __disarm_struct_get_or_default(_struct, "z_index", 0, is_numeric),
@@ -166,8 +162,7 @@ function __disarm_import_entity_animation_mainline_keyframe(_struct) {
                 __disarm_struct_get_or_default(_struct, "bone_ref", [], is_array),
                 function(_struct) {
                     return {
-                        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
-                        idxParent : __disarm_struct_get_or_default(_struct, "parent", -1, is_numeric),
+                        objParent : __disarm_struct_get_or_default(_struct, "parent", -1, is_numeric),
                         key : __disarm_struct_get_or_default(_struct, "key", -1, is_numeric),
                         timeline : __disarm_struct_get_or_default(_struct, "timeline", -1, is_numeric),
                     };
@@ -190,7 +185,6 @@ function __disarm_import_entity_animation_timeline(_struct) {
     case __DISARM_TYPE_VARIABLE: break;
     }
     return {
-        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
         name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
         obj : __disarm_struct_get_or_default(_struct, "obj", -1, is_numeric),
         type : type,
@@ -204,7 +198,6 @@ function __disarm_import_entity_animation_timeline(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline_keyframe(_struct) {
     return {
-        idx : __disarm_struct_get_or_default(_struct, "id", -1, is_numeric),
         time : __disarm_struct_get_or_default(_struct, "time", 0, is_numeric),
         spin : __disarm_struct_get_or_default(_struct, "spin", 1, is_numeric),
     };
@@ -239,7 +232,7 @@ function disarm_animation_begin(_arm) {
             obj.scaleY = 1;
             obj.posX = 0;
             obj.posY = 0;
-            obj.idxParent = -1;
+            obj.objParent = -1;
             break;
         }
     }
@@ -325,7 +318,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         bone.posX = pos_x;
         bone.posY = pos_y;
         bone.a = a;
-        bone.idxParent = bone_ref.idxParent;
+        bone.objParent = bone_ref.objParent;
     }
 }
 
@@ -347,7 +340,7 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
         obj.invalidWorldTransform = false;
         switch (obj.type) {
         case __DISARM_TYPE_BONE:
-            var idx_par = obj.idxParent;
+            var idx_par = obj.objParent;
             if (idx_par != -1) {
                 var par = __disarm_update_world_transform_using_object_array(_objs, idx_par);
                 var par_x = par.posX;
