@@ -30,19 +30,19 @@ function disarm_import_from_struct(_struct) {
     if not (is_struct(_struct)) {
         return undefined;
     }
-    if ("BrashMonkey Spriter" != __disarm_struct_get_or_default_string(_struct, "generator")) {
+    if ("BrashMonkey Spriter" != __disarm_struct_get_string_or_default(_struct, "generator")) {
         return undefined;
     }
     var arm = {
-        version : __disarm_struct_get_or_default_string(_struct, "scon_version", undefined),
+        version : __disarm_struct_get_string_or_default(_struct, "scon_version", undefined),
         atlases : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "atlas", [], is_array),
+                __disarm_struct_get_array(_struct, "atlas"),
                 __disarm_import_atlas),
         folders : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "folder", [], is_array),
+                __disarm_struct_get_array(_struct, "folder"),
                 __disarm_import_folder),
         entities : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "entity", [], is_array),
+                __disarm_struct_get_array(_struct, "entity"),
                 __disarm_import_entity),
         currentEntity : 0,
         entityTable : { }
@@ -63,30 +63,30 @@ function disarm_import_from_struct(_struct) {
 /// @desc Creates a new Disarm atlas instance.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_atlas(_struct) {
-    return __disarm_struct_get_or_default_string(_struct, "name");
+    return __disarm_struct_get_string_or_default(_struct, "name");
 }
 
 /// @desc Creates a new Disarm folder instance.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_folder(_struct) {
     return {
-        name : __disarm_struct_get_or_default_string(_struct, "name"),
-        atlas : __disarm_struct_get_or_default_numeric(_struct, "atlas", -1),
+        name : __disarm_struct_get_string_or_default(_struct, "name"),
+        atlas : __disarm_struct_get_numeric_or_default(_struct, "atlas", -1),
         files : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "file", [], is_array),
+                __disarm_struct_get_array(_struct, "file"),
                 function(_struct) {
                     return {
-                        name : __disarm_struct_get_or_default_string(_struct, "name"),
-                        width : __disarm_struct_get_or_default_numeric(_struct, "width", 1, is_numeric),
-                        height : __disarm_struct_get_or_default_numeric(_struct, "height", 1, is_numeric),
-                        aWidth : __disarm_struct_get_or_default_numeric(_struct, "aw", 1, is_numeric),
-                        aHeight : __disarm_struct_get_or_default_numeric(_struct, "ah", 1, is_numeric),
-                        aX : __disarm_struct_get_or_default_numeric(_struct, "ax"),
-                        aY : __disarm_struct_get_or_default_numeric(_struct, "ay"),
-                        aXOff : __disarm_struct_get_or_default_numeric(_struct, "axoff"),
-                        aYOff : __disarm_struct_get_or_default_numeric(_struct, "ayoff"),
-                        pivotX : __disarm_struct_get_or_default_numeric(_struct, "pivot_x"),
-                        pivotY : __disarm_struct_get_or_default_numeric(_struct, "pivot_y"),
+                        name : __disarm_struct_get_string_or_default(_struct, "name"),
+                        width : __disarm_struct_get_numeric_or_default(_struct, "width", 1, is_numeric),
+                        height : __disarm_struct_get_numeric_or_default(_struct, "height", 1, is_numeric),
+                        aWidth : __disarm_struct_get_numeric_or_default(_struct, "aw", 1, is_numeric),
+                        aHeight : __disarm_struct_get_numeric_or_default(_struct, "ah", 1, is_numeric),
+                        aX : __disarm_struct_get_numeric_or_default(_struct, "ax"),
+                        aY : __disarm_struct_get_numeric_or_default(_struct, "ay"),
+                        aXOff : __disarm_struct_get_numeric_or_default(_struct, "axoff"),
+                        aYOff : __disarm_struct_get_numeric_or_default(_struct, "ayoff"),
+                        pivotX : __disarm_struct_get_numeric_or_default(_struct, "pivot_x"),
+                        pivotY : __disarm_struct_get_numeric_or_default(_struct, "pivot_y"),
                     }
                 }),
     };
@@ -96,12 +96,12 @@ function __disarm_import_folder(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity(_struct) {
     var entity = {
-        name : __disarm_struct_get_or_default_string(_struct, "name"),
+        name : __disarm_struct_get_string_or_default(_struct, "name"),
         objs : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "obj_info", [], is_array),
+                __disarm_struct_get_array(_struct, "obj_info"),
                 __disarm_import_entity_object),
         anims : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "animation", [], is_array),
+                __disarm_struct_get_array(_struct, "animation"),
                 __disarm_import_entity_animation),
         animTable : { },
     };
@@ -116,13 +116,13 @@ function __disarm_import_entity(_struct) {
 /// @desc Creates a new Disarm entity object definition.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_object(_struct) {
-    var type = __disarm_struct_get_or_default_string(_struct, "type", undefined);
+    var type = __disarm_struct_get_string_or_default(_struct, "type", undefined);
     var f = undefined;
     switch (type) {
     case "bone": f = __disarm_import_entity_object_bone; break;
     }
     var obj = f == undefined ? { } : f(_struct);
-    obj.name = __disarm_struct_get_or_default_string(_struct, "name");
+    obj.name = __disarm_struct_get_string_or_default(_struct, "name");
     obj.type = type;
     obj.active = true;
     obj.slots = [];
@@ -134,8 +134,8 @@ function __disarm_import_entity_object(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_object_bone(_struct) {
     return {
-        width : __disarm_struct_get_or_default_numeric(_struct, "w", 1),
-        height : __disarm_struct_get_or_default_numeric(_struct, "h", 1),
+        width : __disarm_struct_get_numeric_or_default(_struct, "w", 1),
+        height : __disarm_struct_get_numeric_or_default(_struct, "h", 1),
         angle : 0,
         scaleX : 1,
         scaleY : 1,
@@ -150,15 +150,15 @@ function __disarm_import_entity_object_bone(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation(_struct) {
     return {
-        name : __disarm_struct_get_or_default_string(_struct, "name"),
+        name : __disarm_struct_get_string_or_default(_struct, "name"),
         time : 0,
-        dt : __disarm_struct_get_or_default_numeric(_struct, "interval", -1),
-        duration : __disarm_struct_get_or_default_numeric(_struct, "length", -1),
-        looping : __disarm_struct_get_or_default_numeric(_struct, "looping", true),
+        dt : __disarm_struct_get_numeric_or_default(_struct, "interval", -1),
+        duration : __disarm_struct_get_numeric_or_default(_struct, "length", -1),
+        looping : __disarm_struct_get_numeric_or_default(_struct, "looping", true),
         mainline : __disarm_import_entity_animation_mainline(
-                __disarm_struct_get_or_default(_struct, "mainline", { }, is_struct)),
+                __disarm_struct_get_struct(_struct, "mainline")),
         timelines :  __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "timeline", [], is_array),
+                __disarm_struct_get_array(_struct, "timeline"),
                 __disarm_import_entity_animation_timeline),
     };
 }
@@ -167,7 +167,7 @@ function __disarm_import_entity_animation(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_mainline(_struct) {
     return __disarm_array_map(
-            __disarm_struct_get_or_default(_struct, "key", [], is_array),
+            __disarm_struct_get_array(_struct, "key"),
             __disarm_import_entity_animation_mainline_keyframe);
 }
 
@@ -175,24 +175,24 @@ function __disarm_import_entity_animation_mainline(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_mainline_keyframe(_struct) {
     return {
-        time : __disarm_struct_get_or_default_numeric(_struct, "time"),
+        time : __disarm_struct_get_numeric_or_default(_struct, "time"),
         objs : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "object_ref", [], is_array),
+                __disarm_struct_get_array(_struct, "object_ref"),
                 function(_struct) {
                     return {
-                        objParent : __disarm_struct_get_or_default_numeric(_struct, "parent", -1),
-                        key : __disarm_struct_get_or_default_numeric(_struct, "key", -1),
-                        timeline : __disarm_struct_get_or_default_numeric(_struct, "timeline", -1),
-                        zIndex : __disarm_struct_get_or_default_numeric(_struct, "z_index", 0),
+                        objParent : __disarm_struct_get_numeric_or_default(_struct, "parent", -1),
+                        key : __disarm_struct_get_numeric_or_default(_struct, "key", -1),
+                        timeline : __disarm_struct_get_numeric_or_default(_struct, "timeline", -1),
+                        zIndex : __disarm_struct_get_numeric_or_default(_struct, "z_index", 0),
                     };
                 }),
         bones : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "bone_ref", [], is_array),
+                __disarm_struct_get_array(_struct, "bone_ref"),
                 function(_struct) {
                     return {
-                        objParent : __disarm_struct_get_or_default_numeric(_struct, "parent", -1),
-                        key : __disarm_struct_get_or_default_numeric(_struct, "key", -1),
-                        timeline : __disarm_struct_get_or_default_numeric(_struct, "timeline", -1),
+                        objParent : __disarm_struct_get_numeric_or_default(_struct, "parent", -1),
+                        key : __disarm_struct_get_numeric_or_default(_struct, "key", -1),
+                        timeline : __disarm_struct_get_numeric_or_default(_struct, "timeline", -1),
                     };
                 }),
     };
@@ -201,18 +201,16 @@ function __disarm_import_entity_animation_mainline_keyframe(_struct) {
 /// @desc Creates a new Disarm entity animation definition for a timeline.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline(_struct) {
-    var type = __disarm_struct_get_or_default_string(_struct, "object_type", undefined);
+    var type = __disarm_struct_get_string_or_default(_struct, "object_type", undefined);
     var f = __disarm_import_entity_animation_timeline_keyframe;
     switch (type) {
     case "bone": f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
     }
     return {
-        name : __disarm_struct_get_or_default_string(_struct, "name"),
-        obj : __disarm_struct_get_or_default_numeric(_struct, "obj", -1),
+        name : __disarm_struct_get_string_or_default(_struct, "name"),
+        obj : __disarm_struct_get_numeric_or_default(_struct, "obj", -1),
         type : type,
-        keys : __disarm_array_map(
-                __disarm_struct_get_or_default(_struct, "key", [], is_array),
-                f),
+        keys : __disarm_array_map(__disarm_struct_get_array(_struct, "key"), f),
     }
 }
 
@@ -220,8 +218,8 @@ function __disarm_import_entity_animation_timeline(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline_keyframe(_struct) {
     return {
-        time : __disarm_struct_get_or_default_numeric(_struct, "time"),
-        spin : __disarm_struct_get_or_default_numeric(_struct, "spin", 1),
+        time : __disarm_struct_get_numeric_or_default(_struct, "time"),
+        spin : __disarm_struct_get_numeric_or_default(_struct, "spin", 1),
     };
 }
 
@@ -229,13 +227,13 @@ function __disarm_import_entity_animation_timeline_keyframe(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
-    var bone = __disarm_struct_get_or_default(_struct, "bone", { }, is_struct);
-    key.angle = __disarm_struct_get_or_default_numeric(bone, "angle");
-    key.scaleX = __disarm_struct_get_or_default_numeric(bone, "scale_x", 1);
-    key.scaleY = __disarm_struct_get_or_default_numeric(bone, "scale_y", 1);
-    key.posX = __disarm_struct_get_or_default_numeric(bone, "x");
-    key.posY = __disarm_struct_get_or_default_numeric(bone, "y");
-    key.a = __disarm_struct_get_or_default_numeric(bone, "a", 1);
+    var bone = __disarm_struct_get_struct(_struct, "bone");
+    key.angle = __disarm_struct_get_numeric_or_default(bone, "angle");
+    key.scaleX = __disarm_struct_get_numeric_or_default(bone, "scale_x", 1);
+    key.scaleY = __disarm_struct_get_numeric_or_default(bone, "scale_y", 1);
+    key.posX = __disarm_struct_get_numeric_or_default(bone, "x");
+    key.posY = __disarm_struct_get_numeric_or_default(bone, "y");
+    key.a = __disarm_struct_get_numeric_or_default(bone, "a", 1);
     return key;
 }
 
@@ -440,28 +438,12 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
     draw_set_alpha(default_alpha);
 }
 
-/// @desc Attempts to get a value from a struct with a specific type, and returns
-///       a default value if it doesn't exist or the type is wrong.
-/// @param {struct} struct The struct to check.
-/// @param {string} key The key to check.
-/// @param {value} default The default value.
-/// @param {script} [p] The predicate that the value must hold for.
-function __disarm_struct_get_or_default(_struct, _key, _default, _p=undefined) {
-    if (variable_struct_exists(_struct, _key)) {
-        var value = _struct[$ _key];
-        if (_p == undefined || _p(value)) {
-            return value;
-        }
-    }
-    return _default;
-}
-
 /// @desc Attempts to get a string value from a struct, and returns a default value
 ///       if it doesn't exist.
 /// @param {struct} struct The struct to check.
 /// @param {string} key The key to check.
 /// @param {value} [default] The default value.
-function __disarm_struct_get_or_default_string(_struct, _key, _default="") {
+function __disarm_struct_get_string_or_default(_struct, _key, _default="") {
     if (variable_struct_exists(_struct, _key)) {
         var value = _struct[$ _key];
         return is_string(value) ? value : string(value);
@@ -474,7 +456,7 @@ function __disarm_struct_get_or_default_string(_struct, _key, _default="") {
 /// @param {struct} struct The struct to check.
 /// @param {string} key The key to check.
 /// @param {value} [default] The default value.
-function __disarm_struct_get_or_default_numeric(_struct, _key, _default=0) {
+function __disarm_struct_get_numeric_or_default(_struct, _key, _default=0) {
     if (variable_struct_exists(_struct, _key)) {
         var value = _struct[$ _key];
         if (is_numeric(value)) {
@@ -487,6 +469,30 @@ function __disarm_struct_get_or_default_numeric(_struct, _key, _default=0) {
         }
     }
     return _default;
+}
+
+/// @desc Attempts to get an array value from a struct.
+/// @param {struct} struct The struct to check.
+/// @param {string} key The key to check.
+function __disarm_struct_get_array(_struct, _key) {
+    if (variable_struct_exists(_struct, _key)) {
+        var value = _struct[$ _key];
+        return is_array(value) ? value : [value];
+    }
+    return [];
+}
+
+/// @desc Attempts to get a struct value from a struct.
+/// @param {struct} struct The struct to check.
+/// @param {string} key The key to check.
+function __disarm_struct_get_struct(_struct, _key) {
+    if (variable_struct_exists(_struct, _key)) {
+        var value = _struct[$ _key];
+        if (is_struct(value)) {
+            return value;
+        }
+    }
+    return { };
 }
 
 /// @desc Creates a new array of the same size by applying some function to the middle values.
