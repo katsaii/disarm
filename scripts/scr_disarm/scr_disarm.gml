@@ -3,15 +3,6 @@
  * Kat @katsaii
  */
 
-#macro __DISARM_TYPE_SPRITE "sprite"
-#macro __DISARM_TYPE_BONE "bone"
-#macro __DISARM_TYPE_BOX "box"
-#macro __DISARM_TYPE_POINT "point"
-#macro __DISARM_TYPE_SOUND "sound"
-#macro __DISARM_TYPE_ENTITY "entity"
-#macro __DISARM_TYPE_VARIABLE "variable"
-#macro __DISARM_TYPE_UNKNOWN "unknown"
-
 /// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
 /// @param {string} filepath The path of the Spriter project file.
 function disarm_import(_path) {
@@ -126,16 +117,10 @@ function __disarm_import_entity(_struct) {
 /// @desc Creates a new Disarm entity object definition.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_object(_struct) {
-    var type = __disarm_struct_get_or_default(_struct, "type", __DISARM_TYPE_UNKNOWN, is_string);
+    var type = __disarm_struct_get_or_default(_struct, "type", undefined, is_string);
     var f = undefined;
     switch (type) {
-    case __DISARM_TYPE_SPRITE: break;
-    case __DISARM_TYPE_BONE: f = __disarm_import_entity_object_bone; break;
-    case __DISARM_TYPE_BOX: break;
-    case __DISARM_TYPE_POINT: break;
-    case __DISARM_TYPE_SOUND: break;
-    case __DISARM_TYPE_ENTITY: break;
-    case __DISARM_TYPE_VARIABLE: break;
+    case "bone": f = __disarm_import_entity_object_bone; break;
     }
     var obj = f == undefined ? { } : f(_struct);
     obj.name = __disarm_struct_get_or_default(_struct, "name", "", is_string);
@@ -217,16 +202,10 @@ function __disarm_import_entity_animation_mainline_keyframe(_struct) {
 /// @desc Creates a new Disarm entity animation definition for a timeline.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline(_struct) {
-    var type = __disarm_struct_get_or_default(_struct, "object_type", __DISARM_TYPE_UNKNOWN, is_string);
+    var type = __disarm_struct_get_or_default(_struct, "object_type", undefined, is_string);
     var f = __disarm_import_entity_animation_timeline_keyframe;
     switch (type) {
-    case __DISARM_TYPE_SPRITE: break;
-    case __DISARM_TYPE_BONE: f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
-    case __DISARM_TYPE_BOX: break;
-    case __DISARM_TYPE_POINT: break;
-    case __DISARM_TYPE_SOUND: break;
-    case __DISARM_TYPE_ENTITY: break;
-    case __DISARM_TYPE_VARIABLE: break;
+    case "bone": f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
     }
     return {
         name : __disarm_struct_get_or_default(_struct, "name", "", is_string),
@@ -251,7 +230,7 @@ function __disarm_import_entity_animation_timeline_keyframe(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
-    var bone = __disarm_struct_get_or_default(_struct, __DISARM_TYPE_BONE, { }, is_struct);
+    var bone = __disarm_struct_get_or_default(_struct, "bone", { }, is_struct);
     key.angle = __disarm_struct_get_or_default(bone, "angle", 0, is_numeric);
     key.scaleX = __disarm_struct_get_or_default(bone, "scale_x", 1, is_numeric);
     key.scaleY = __disarm_struct_get_or_default(bone, "scale_y", 1, is_numeric);
@@ -270,7 +249,7 @@ function disarm_animation_begin(_arm) {
         obj.active = false;
         obj.slotCount = 0;
         switch (obj.type) {
-        case __DISARM_TYPE_BONE:
+        case "bone":
             obj.invalidWorldTransform = true;
             obj.angle = 0;
             obj.scaleX = 1;
@@ -399,7 +378,7 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
     if (obj.invalidWorldTransform && obj.active) {
         obj.invalidWorldTransform = false;
         switch (obj.type) {
-        case __DISARM_TYPE_BONE:
+        case "bone":
             var idx_par = obj.objParent;
             if (idx_par != -1) {
                 var par = __disarm_update_world_transform_using_object_array(_objs, idx_par);
@@ -442,7 +421,7 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
             continue;
         }
         switch (obj.type) {
-        case __DISARM_TYPE_BONE:
+        case "bone":
             var len = obj.width * obj.scaleX;
             var wid = obj.height * obj.scaleY;
             var dir = obj.angle;
