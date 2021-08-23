@@ -202,9 +202,10 @@ function __disarm_import_entity_animation_mainline_keyframe(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline(_struct) {
     var type = __disarm_struct_get_string_or_default(_struct, "object_type", undefined);
-    var f = __disarm_import_entity_animation_timeline_keyframe;
+    var f;
     switch (type) {
     case "bone": f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
+    default: f = __disarm_import_entity_animation_timeline_keyframe_object; break;
     }
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
@@ -223,17 +224,35 @@ function __disarm_import_entity_animation_timeline_keyframe(_struct) {
     };
 }
 
-/// @desc Creates a new Disarm entity animation definition for a timeline keyframes.
+/// @desc Creates a new Disarm entity animation definition for a bone keyframe.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
     var bone = __disarm_struct_get_struct(_struct, "bone");
+    key.posX = __disarm_struct_get_numeric_or_default(bone, "x");
+    key.posY = __disarm_struct_get_numeric_or_default(bone, "y");
     key.angle = __disarm_struct_get_numeric_or_default(bone, "angle");
     key.scaleX = __disarm_struct_get_numeric_or_default(bone, "scale_x", 1);
     key.scaleY = __disarm_struct_get_numeric_or_default(bone, "scale_y", 1);
-    key.posX = __disarm_struct_get_numeric_or_default(bone, "x");
-    key.posY = __disarm_struct_get_numeric_or_default(bone, "y");
     key.a = __disarm_struct_get_numeric_or_default(bone, "a", 1);
+    return key;
+}
+
+/// @desc Creates a new Disarm entity animation definition for an object keyframe.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_timeline_keyframe_object(_struct) {
+    var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
+    var obj = __disarm_struct_get_struct(_struct, "object");
+    key.folder = __disarm_struct_get_numeric_or_default(obj, "folder");
+    key.file = __disarm_struct_get_numeric_or_default(obj, "file");
+    key.posX = __disarm_struct_get_numeric_or_default(obj, "x");
+    key.posY = __disarm_struct_get_numeric_or_default(obj, "y");
+    key.angle = __disarm_struct_get_numeric_or_default(obj, "angle");
+    key.scaleX = __disarm_struct_get_numeric_or_default(obj, "scale_x", 1);
+    key.scaleY = __disarm_struct_get_numeric_or_default(obj, "scale_y", 1);
+    key.pivotX = __disarm_struct_get_numeric_or_default(obj, "pivot_x");
+    key.pivotY = __disarm_struct_get_numeric_or_default(obj, "pivot_y", 1);
+    key.a = __disarm_struct_get_numeric_or_default(obj, "a", 1);
     return key;
 }
 
@@ -338,21 +357,21 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
                 }
             }
             var interp = clamp((time_mid - time_key) / (time_key_end - time_key), 0, 1);
+            pos_x = lerp(pos_x, key_next.posX, interp);
+            pos_y = lerp(pos_y, key_next.posY, interp);
             angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
             scale_x = lerp(scale_x, key_next.scaleX, interp);
             scale_y = lerp(scale_y, key_next.scaleY, interp);
-            pos_x = lerp(pos_x, key_next.posX, interp);
-            pos_y = lerp(pos_y, key_next.posY, interp);
             a = lerp(pos_y, key_next.posY, interp);
         }
         // apply transformations
         var bone = objs[timeline.obj];
         bone.active = true; // enables the bone visibility
+        bone.posX = pos_x;
+        bone.posY = pos_y;
         bone.angle = angle;
         bone.scaleX = scale_x;
         bone.scaleY = scale_y;
-        bone.posX = pos_x;
-        bone.posY = pos_y;
         bone.a = a;
         bone.objParent = bone_ref.objParent;
     }
