@@ -309,6 +309,8 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
         switch (_type) {
         case "sprite":
             obj = {
+                folder : -1,
+                file : -1,
                 posX : 0,
                 posY : 0,
                 angle : 0,
@@ -437,6 +439,8 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         switch (type) {
         case "sprite":
             // get interpolation
+            var folder = key.folder;
+            var file = key.file;
             var pos_x = key.posX;
             var pos_y = key.posY;
             var angle = key.angle;
@@ -458,6 +462,8 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
                 alpha = lerp(pos_y, key_next.posY, interp);
             }
             // apply transformations
+            obj.folder = folder;
+            obj.file = file;
             obj.posX = pos_x;
             obj.posY = pos_y;
             obj.angle = angle;
