@@ -256,28 +256,6 @@ function __disarm_import_entity_animation_timeline_keyframe_sprite(_struct) {
     return key;
 }
 
-/// @desc Resets the state of armature objects.
-/// @param {struct} arm The Disarm instance to update.
-function disarm_animation_begin(_arm) {
-    var objs = _arm.entities[_arm.currentEntity].objs;
-    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
-        var obj = objs[i];
-        obj.active = false;
-        obj.slotCount = 0;
-        switch (obj.type) {
-        case "bone":
-            obj.invalidWorldTransform = true;
-            obj.angle = 0;
-            obj.scaleX = 1;
-            obj.scaleY = 1;
-            obj.posX = 0;
-            obj.posY = 0;
-            obj.objParent = -1;
-            break;
-        }
-    }
-}
-
 /// @desc Returns whether an entity exists with this name.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} entity The name of the entity to check.
@@ -315,7 +293,69 @@ function __disarm_animation_calculate_animation_interpolation_between_keyframes(
             _end += _duration;
         }
     }
-    return clamp((_seek - _start) / (_end - _start), 0, 1);
+    return _end == _start ? 0 : clamp((_seek - _start) / (_end - _start), 0, 1);
+}
+
+/// @desc Returns the slot with this name, or creates a new slot if it doesn't exist.
+/// @param {string} name The name of the slot.
+/// @param {string} type The type of slot.
+/// @param {struct} table The table of slots to look-up.
+/// @param {array} array The array to insert a new slot into if one doesn't exist.
+function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_table, _slots) {
+    if (variable_struct_exists(_slot_table, _name)) {
+        return _slot_table[$ _name];
+    } else {
+        var obj;
+        switch (_type) {
+        case "sprite":
+            obj = {
+                posX : 0,
+                posY : 0,
+                angle : 0,
+                scaleX : 1,
+                scaleY : 1,
+                pivotX : 0,
+                pivotY : 1,
+                alpha : 1,
+            };
+            break;
+        default:
+            obj = { };
+            break;
+        }
+        obj[$ "name"] = _name;
+        obj[$ "type"] = _type;
+        obj[$ "objParent"] = -1;
+        obj[$ "zIndex"] = 0;
+        _slot_table[$ _name] = obj;
+        array_push(_slots, obj);
+        return obj;
+    }
+}
+
+/// @desc Resets the state of armature objects.
+/// @param {struct} arm The Disarm instance to update.
+function disarm_animation_begin(_arm) {
+    var entity = _arm.entities[_arm.currentEntity];
+    entity.slots = [];
+    entity.slotTable = { };
+    var objs = entity.objs;
+    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
+        var obj = objs[i];
+        obj.active = false;
+        obj.slotCount = 0;
+        switch (obj.type) {
+        case "bone":
+            obj.invalidWorldTransform = true;
+            obj.angle = 0;
+            obj.scaleX = 1;
+            obj.scaleY = 1;
+            obj.posX = 0;
+            obj.posY = 0;
+            obj.objParent = -1;
+            break;
+        }
+    }
 }
 
 /// @desc Adds an animation to the armature pose.
@@ -393,56 +433,43 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var idx_key = obj_ref.key;
         var key = keys[idx_key];
         var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : (looping ? keys[0] : undefined);
-        // get interpolation
-        var pos_x = key.posX;
-        var pos_y = key.posY;
-        var angle = key.angle;
-        var scale_x = key.scaleX;
-        var scale_y = key.scaleY;
-        var pivot_x = key.pivotX;
-        var pivot_y = key.pivotY;
-        var alpha = key.alpha;
-        if (key_next != undefined) {
-            var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
-                    time, key.time, key_next.time, looping, time_duration);
-            pos_x = lerp(pos_x, key_next.posX, interp);
-            pos_y = lerp(pos_y, key_next.posY, interp);
-            angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
-            scale_x = lerp(scale_x, key_next.scaleX, interp);
-            scale_y = lerp(scale_y, key_next.scaleY, interp);
-            pivot_x = lerp(pivot_x, key_next.pivotX, interp);
-            pivot_y = lerp(pivot_y, key_next.pivotY, interp);
-            alpha = lerp(pos_y, key_next.posY, interp);
+        var obj = __disarm_animation_get_slot_by_name_or_spawn_new(timeline.name, type, slot_table, slots);
+        switch (type) {
+        case "sprite":
+            // get interpolation
+            var pos_x = key.posX;
+            var pos_y = key.posY;
+            var angle = key.angle;
+            var scale_x = key.scaleX;
+            var scale_y = key.scaleY;
+            var pivot_x = key.pivotX;
+            var pivot_y = key.pivotY;
+            var alpha = key.alpha;
+            if (key_next != undefined) {
+                var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+                        time, key.time, key_next.time, looping, time_duration);
+                pos_x = lerp(pos_x, key_next.posX, interp);
+                pos_y = lerp(pos_y, key_next.posY, interp);
+                angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
+                scale_x = lerp(scale_x, key_next.scaleX, interp);
+                scale_y = lerp(scale_y, key_next.scaleY, interp);
+                pivot_x = lerp(pivot_x, key_next.pivotX, interp);
+                pivot_y = lerp(pivot_y, key_next.pivotY, interp);
+                alpha = lerp(pos_y, key_next.posY, interp);
+            }
+            // apply transformations
+            obj.posX = pos_x;
+            obj.posY = pos_y;
+            obj.angle = angle;
+            obj.scaleX = scale_x;
+            obj.scaleY = scale_y;
+            obj.pivotX = pivot_x;
+            obj.pivotY = pivot_y;
+            obj.alpha = alpha;
+            break;
         }
-        // apply transformations
-        var obj;
-        var obj_name = timeline.name;
-        if (variable_struct_exists(slot_table, obj_name)) {
-            obj = slot_table[$ obj_name];
-        } else {
-            obj = {
-                posX : 0,
-                posY : 0,
-                angle : 0,
-                scaleX : 1,
-                scaleY : 1,
-                pivotX : 0,
-                pivotY : 1,
-                alpha : 1,
-                objParent : -1,
-            };
-            slot_table[$ obj_name] = obj;
-            array_push(slots, obj);
-        }
-        obj.posX = pos_x;
-        obj.posY = pos_y;
-        obj.angle = angle;
-        obj.scaleX = scale_x;
-        obj.scaleY = scale_y;
-        obj.pivotX = pivot_x;
-        obj.pivotY = pivot_y;
-        obj.alpha = alpha;
         obj.objParent = obj_ref.objParent;
+        obj.zIndex = obj_ref.zIndex;
     }
 }
 
@@ -492,7 +519,9 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
 /// @param {struct} Disarm The Disarm instance to render.
 /// @param {matrix} transform The global transformation to apply to this armature.
 function disarm_draw_debug(_arm, _matrix=undefined) {
-    var objs = _arm.entities[_arm.currentEntity].objs;
+    var entity = _arm.entities[_arm.currentEntity];
+    var objs = entity.objs;
+    var slots = entity.slots;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
     if (_matrix != undefined) {
@@ -516,6 +545,14 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
             var y2 = y1 + lengthdir_y(len, dir);
             draw_set_colour(obj.invalidWorldTransform ? c_red : c_yellow);
             draw_arrow(x1, y1, x2, y2, wid);
+            break;
+        }
+    }
+    for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
+        var obj = slots[i];
+        switch (obj.type) {
+        case "sprite":
+            draw_circle(obj.posX, obj.posY, 5, false);
             break;
         }
     }
