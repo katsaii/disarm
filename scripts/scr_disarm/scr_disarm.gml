@@ -230,7 +230,7 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
     var bone = __disarm_struct_get_struct(_struct, "bone");
     key.posX = __disarm_struct_get_numeric_or_default(bone, "x");
-    key.posY = __disarm_struct_get_numeric_or_default(bone, "y");
+    key.posY = -__disarm_struct_get_numeric_or_default(bone, "y");
     key.angle = __disarm_struct_get_numeric_or_default(bone, "angle");
     key.scaleX = __disarm_struct_get_numeric_or_default(bone, "scale_x", 1);
     key.scaleY = __disarm_struct_get_numeric_or_default(bone, "scale_y", 1);
@@ -246,7 +246,7 @@ function __disarm_import_entity_animation_timeline_keyframe_sprite(_struct) {
     key.folder = __disarm_struct_get_numeric_or_default(obj, "folder");
     key.file = __disarm_struct_get_numeric_or_default(obj, "file");
     key.posX = __disarm_struct_get_numeric_or_default(obj, "x");
-    key.posY = __disarm_struct_get_numeric_or_default(obj, "y");
+    key.posY = -__disarm_struct_get_numeric_or_default(obj, "y");
     key.angle = __disarm_struct_get_numeric_or_default(obj, "angle");
     key.scaleX = __disarm_struct_get_numeric_or_default(obj, "scale_x", 1);
     key.scaleY = __disarm_struct_get_numeric_or_default(obj, "scale_y", 1);
@@ -503,7 +503,7 @@ function disarm_animation_end(_arm) {
                 continue;
             }
             if (obj_parent != undefined) {
-                __disarm_update_world_transform(obj, obj_parent, -1);
+                __disarm_update_world_transform(obj, obj_parent);
             }
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
@@ -520,8 +520,8 @@ function disarm_animation_end(_arm) {
             var obj_scale_x = obj.scaleX;
             var obj_scale_y = obj.scaleY;
             var obj_dir = obj.angle;
-            var i_ = __disarm_apply_forward_kinematics(1, 0, obj_dir, -1);
-            var j_ = __disarm_apply_forward_kinematics(0, -1, obj_dir, -1);
+            var i_ = __disarm_apply_forward_kinematics(1, 0, obj_dir);
+            var j_ = __disarm_apply_forward_kinematics(0, 1, obj_dir);
             var i_x = i_[0];
             var i_y = i_[1];
             var j_x = j_[0];
@@ -549,9 +549,7 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
         switch (obj.type) {
         case "bone":
             var idx_parent = obj.objParent;
-            if (idx_parent == -1) {
-                obj.posY *= -1;
-            } else {
+            if (idx_parent != -1) {
                 var obj_parent = __disarm_update_world_transform_using_object_array(_objs, idx_parent);
                 __disarm_update_world_transform(obj, obj_parent);
             }
@@ -565,7 +563,7 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
 /// @param {struct} obj The object to update.
 /// @param {struct} parent The parent to use.
 /// @param {real} [up] The direction of the "up" vector.
-function __disarm_update_world_transform(_obj, _obj_parent, _up=1) {
+function __disarm_update_world_transform(_obj, _obj_parent) {
     var par_x = _obj_parent.posX;
     var par_y = _obj_parent.posY;
     var par_scale_x = _obj_parent.scaleX;
@@ -578,7 +576,7 @@ function __disarm_update_world_transform(_obj, _obj_parent, _up=1) {
     _obj.alpha *= par_alpha;
     var obj_x = _obj.posX;
     var obj_y = _obj.posY;
-    var fk = __disarm_apply_forward_kinematics(obj_x * par_scale_x, obj_y * par_scale_y, par_dir, _up);
+    var fk = __disarm_apply_forward_kinematics(obj_x * par_scale_x, obj_y * par_scale_y, par_dir);
     _obj.posX = par_x + fk[0];
     _obj.posY = par_y + fk[1];
 }
@@ -588,11 +586,10 @@ function __disarm_update_world_transform(_obj, _obj_parent, _up=1) {
 /// @param {real} y The y position to rotate.
 /// @param {real} angle The angle to rotate about.
 /// @param {real} up The direction of the "up" vector.
-function __disarm_apply_forward_kinematics(_x, _y, _angle, _up) {
-    return [
-        lengthdir_x(_x, _angle) + lengthdir_y(_y, _angle),
-        lengthdir_y(_x, _angle) + lengthdir_x(_up * _y, _angle)
-    ];
+function __disarm_apply_forward_kinematics(_x, _y, _angle) {
+    var mag = point_distance(0, 0, _x, _y);
+    var dir = point_direction(0, 0, _x, _y) + _angle;
+    return [lengthdir_x(mag, dir), lengthdir_y(mag, dir)];
 }
 
 /// @desc Renders a debug view of the armature.
