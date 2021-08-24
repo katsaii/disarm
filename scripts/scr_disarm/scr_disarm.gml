@@ -100,6 +100,8 @@ function __disarm_import_entity(_struct) {
         objs : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "obj_info"),
                 __disarm_import_entity_object),
+        slots : [],
+        slotTable : { },
         anims : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "animation"),
                 __disarm_import_entity_animation),
@@ -201,11 +203,11 @@ function __disarm_import_entity_animation_mainline_keyframe(_struct) {
 /// @desc Creates a new Disarm entity animation definition for a timeline.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline(_struct) {
-    var type = __disarm_struct_get_string_or_default(_struct, "object_type", undefined);
-    var f;
+    var type = __disarm_struct_get_string_or_default(_struct, "object_type", "sprite");
+    var f = __disarm_import_entity_animation_timeline_keyframe;
     switch (type) {
     case "bone": f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
-    default: f = __disarm_import_entity_animation_timeline_keyframe_object; break;
+    case "sprite": f = __disarm_import_entity_animation_timeline_keyframe_sprite; break;
     }
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
@@ -238,9 +240,9 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     return key;
 }
 
-/// @desc Creates a new Disarm entity animation definition for an object keyframe.
+/// @desc Creates a new Disarm entity animation definition for a sprite keyframe.
 /// @param {struct} struct A struct containing the Spriter project information.
-function __disarm_import_entity_animation_timeline_keyframe_object(_struct) {
+function __disarm_import_entity_animation_timeline_keyframe_sprite(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
     var obj = __disarm_struct_get_struct(_struct, "object");
     key.folder = __disarm_struct_get_numeric_or_default(obj, "folder");
@@ -307,6 +309,8 @@ function disarm_animation_exists(_arm, _anim) {
 function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var entity = _arm.entities[_arm.currentEntity];
     var objs = entity.objs;
+    var slots = entity.slots;
+    var slot_table = entity.slotTable;
     var anim = entity.anims[entity.animTable[$ _anim]];
     var mainline = anim.mainline;
     var timelines = anim.timelines;
@@ -421,16 +425,34 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             alpha = lerp(pos_y, key_next.posY, interp);
         }
         // apply transformations
-        var bone = objs[key.objParent];
-        bone.posX = pos_x;
-        bone.posY = pos_y;
-        bone.angle = angle;
-        bone.scaleX = scale_x;
-        bone.scaleY = scale_y;
-        bone.pivotX = pivot_x;
-        bone.pivotY = pivot_y;
-        bone.alpha = alpha;
-        bone.objParent = bone_ref.objParent;
+        var obj;
+        var obj_name = timeline.name;
+        if (variable_struct_exists(slot_table, obj_name)) {
+            obj = slot_table[$ obj_name];
+        } else {
+            obj = {
+                posX : 0,
+                posY : 0,
+                angle : 0,
+                scaleX : 1,
+                scaleY : 1,
+                pivotX : 0,
+                pivotY : 1,
+                alpha : 1,
+                objParent : -1,
+            };
+            slot_table[$ obj_name] = obj;
+            array_push(slots, obj);
+        }
+        obj.posX = pos_x;
+        obj.posY = pos_y;
+        obj.angle = angle;
+        obj.scaleX = scale_x;
+        obj.scaleY = scale_y;
+        obj.pivotX = pivot_x;
+        obj.pivotY = pivot_y;
+        obj.alpha = alpha;
+        obj.objParent = obj_ref.objParent;
     }
 }
 
