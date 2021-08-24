@@ -127,8 +127,6 @@ function __disarm_import_entity_object(_struct) {
     obj.name = __disarm_struct_get_string_or_default(_struct, "name");
     obj.type = type;
     obj.active = true;
-    obj.slots = [];
-    obj.slotCount = 0;
     return obj;
 }
 
