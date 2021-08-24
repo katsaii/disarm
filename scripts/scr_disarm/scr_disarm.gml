@@ -234,7 +234,7 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     key.angle = __disarm_struct_get_numeric_or_default(bone, "angle");
     key.scaleX = __disarm_struct_get_numeric_or_default(bone, "scale_x", 1);
     key.scaleY = __disarm_struct_get_numeric_or_default(bone, "scale_y", 1);
-    key.a = __disarm_struct_get_numeric_or_default(bone, "a", 1);
+    key.alpha = __disarm_struct_get_numeric_or_default(bone, "a", 1);
     return key;
 }
 
@@ -252,7 +252,7 @@ function __disarm_import_entity_animation_timeline_keyframe_object(_struct) {
     key.scaleY = __disarm_struct_get_numeric_or_default(obj, "scale_y", 1);
     key.pivotX = __disarm_struct_get_numeric_or_default(obj, "pivot_x");
     key.pivotY = __disarm_struct_get_numeric_or_default(obj, "pivot_y", 1);
-    key.a = __disarm_struct_get_numeric_or_default(obj, "a", 1);
+    key.alpha = __disarm_struct_get_numeric_or_default(obj, "a", 1);
     return key;
 }
 
@@ -334,12 +334,12 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var key = keys[idx_key];
         var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : undefined;
         // get interpolation
+        var pos_x = key.posX;
+        var pos_y = key.posY;
         var angle = key.angle;
         var scale_x = key.scaleX;
         var scale_y = key.scaleY;
-        var pos_x = key.posX;
-        var pos_y = key.posY;
-        var a = key.a;
+        var alpha = key.alpha;
         if (looping || key_next != undefined) {
             if (key_next == undefined) {
                 key_next = keys[0];
@@ -362,7 +362,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
             scale_x = lerp(scale_x, key_next.scaleX, interp);
             scale_y = lerp(scale_y, key_next.scaleY, interp);
-            a = lerp(pos_y, key_next.posY, interp);
+            alpha = lerp(pos_y, key_next.posY, interp);
         }
         // apply transformations
         var bone = objs[timeline.obj];
@@ -372,7 +372,64 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         bone.angle = angle;
         bone.scaleX = scale_x;
         bone.scaleY = scale_y;
-        bone.a = a;
+        bone.alpha = alpha;
+        bone.objParent = bone_ref.objParent;
+    }
+    // apply object animations
+    var obj_refs = mainframe.objs;
+    var obj_ref_count = array_length(obj_refs);
+    for (var i = 0; i < obj_ref_count; i += 1) {
+        var obj_ref = obj_refs[i];
+        var timeline = timelines[obj_ref.timeline];
+        var keys = timeline.keys;
+        var idx_key = obj_ref.key;
+        var key = keys[idx_key];
+        var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : undefined;
+        // get interpolation
+        var pos_x = key.posX;
+        var pos_y = key.posY;
+        var angle = key.angle;
+        var scale_x = key.scaleX;
+        var scale_y = key.scaleY;
+        var pivot_x = key.pivotX;
+        var pivot_y = key.pivotY;
+        var alpha = key.alpha;
+        if (looping || key_next != undefined) {
+            if (key_next == undefined) {
+                key_next = keys[0];
+            }
+            var time_mid = time;
+            var time_key = key.time;
+            var time_key_end = key_next.time;
+            if (looping) {
+                // wrap around animation
+                if (time_mid < time_key) {
+                    time_mid += time_duration;
+                }
+                if (time_key_end < time_key) {
+                    time_key_end += time_duration;
+                }
+            }
+            var interp = clamp((time_mid - time_key) / (time_key_end - time_key), 0, 1);
+            pos_x = lerp(pos_x, key_next.posX, interp);
+            pos_y = lerp(pos_y, key_next.posY, interp);
+            angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
+            scale_x = lerp(scale_x, key_next.scaleX, interp);
+            scale_y = lerp(scale_y, key_next.scaleY, interp);
+            pivot_x = lerp(pivot_x, key_next.pivotX, interp);
+            pivot_y = lerp(pivot_y, key_next.pivotY, interp);
+            alpha = lerp(pos_y, key_next.posY, interp);
+        }
+        // apply transformations
+        var bone = objs[key.objParent];
+        bone.posX = pos_x;
+        bone.posY = pos_y;
+        bone.angle = angle;
+        bone.scaleX = scale_x;
+        bone.scaleY = scale_y;
+        bone.pivotX = pivot_x;
+        bone.pivotY = pivot_y;
+        bone.alpha = alpha;
         bone.objParent = bone_ref.objParent;
     }
 }
