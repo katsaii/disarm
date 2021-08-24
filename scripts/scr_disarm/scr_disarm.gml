@@ -353,7 +353,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var keys = timeline.keys;
         var idx_key = bone_ref.key;
         var key = keys[idx_key];
-        var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : undefined;
+        var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : (looping ? keys[0] : undefined);
         // get interpolation
         var pos_x = key.posX;
         var pos_y = key.posY;
@@ -361,10 +361,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var scale_x = key.scaleX;
         var scale_y = key.scaleY;
         var alpha = key.alpha;
-        if (looping || key_next != undefined) {
-            if (key_next == undefined) {
-                key_next = keys[0];
-            }
+        if (key_next != undefined) {
             var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
                     time, key.time, key_next.time, looping, time_duration);
             pos_x = lerp(pos_x, key_next.posX, interp);
@@ -392,9 +389,10 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var obj_ref = obj_refs[i];
         var timeline = timelines[obj_ref.timeline];
         var keys = timeline.keys;
+        var type = timeline.type;
         var idx_key = obj_ref.key;
         var key = keys[idx_key];
-        var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : undefined;
+        var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : (looping ? keys[0] : undefined);
         // get interpolation
         var pos_x = key.posX;
         var pos_y = key.posY;
@@ -404,10 +402,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         var pivot_x = key.pivotX;
         var pivot_y = key.pivotY;
         var alpha = key.alpha;
-        if (looping || key_next != undefined) {
-            if (key_next == undefined) {
-                key_next = keys[0];
-            }
+        if (key_next != undefined) {
             var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
                     time, key.time, key_next.time, looping, time_duration);
             pos_x = lerp(pos_x, key_next.posX, interp);
