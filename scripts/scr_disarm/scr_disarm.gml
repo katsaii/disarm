@@ -319,6 +319,8 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
                 pivotX : 0,
                 pivotY : 1,
                 alpha : 1,
+                aX : 0, bX : 0, cX : 0, dX : 0,
+                aY : 0, bY : 0, cY : 0, dY : 0,
             };
             break;
         default:
@@ -485,14 +487,53 @@ function disarm_animation_end(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
     var objs = entity.objs;
     var slots = entity.slots;
+    var folders = _arm.folders;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(objs, i);
     }
     for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
         var obj = slots[i];
         var idx_parent = obj.objParent;
-        var obj_parent = idx_parent == -1 ? -1 : objs[idx_parent];
-        __disarm_update_world_transform_of_slot(obj, obj_parent);
+        var obj_parent = idx_parent == -1 ? undefined : objs[idx_parent];
+        switch (obj.type) {
+        case "sprite":
+            var idx_folder = obj.folder;
+            var idx_file = obj.file;
+            if (idx_folder == -1 || idx_file == -1) {
+                continue;
+            }
+            if (obj_parent != undefined) {
+                __disarm_update_world_transform(obj, obj_parent);
+            }
+            var folder = folders[idx_folder];
+            var file = folder.files[idx_file];
+            var height = file.height;
+            var width = file.width;
+            var pivot_x = file.pivotX;
+            var pivot_y = file.pivotY;
+            var left = -pivot_x;
+            var top = -pivot_y;
+            var right = left + width;
+            var bottom = top + height;
+            var obj_x = obj.posX;
+            var obj_y = obj.posY;
+            var obj_scale_x = obj.scaleX;
+            var obj_scale_y = obj.scaleY;
+            var obj_dir = obj.angle;
+            var i_x = lengthdir_x(obj_scale_x, obj_dir);
+            var i_y = lengthdir_y(obj_scale_x, obj_dir);
+            var j_x = lengthdir_y(obj_scale_y, obj_dir);
+            var j_y = -lengthdir_x(obj_scale_y, obj_dir);
+            obj.aX = obj_x + left * i_x + top * j_x;
+            obj.aY = obj_y + left * i_y + top * j_y;
+            obj.bX = obj_x + right * i_x + top * j_x;
+            obj.bY = obj_y + right * i_y + top * j_y;
+            obj.cX = obj_x + right * i_x + bottom * j_x;
+            obj.cY = obj_y + right * i_y + bottom * j_y;
+            obj.dX = obj_x + left * i_x + bottom * j_x;
+            obj.dY = obj_y + left * i_y + bottom * j_y;
+            break;
+        }
     }
 }
 
@@ -505,23 +546,10 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
         obj.invalidWorldTransform = false;
         switch (obj.type) {
         case "bone":
-            var idx_par = obj.objParent;
-            if (idx_par != -1) {
-                var par = __disarm_update_world_transform_using_object_array(_objs, idx_par);
-                var par_x = par.posX;
-                var par_y = par.posY;
-                var par_scale_x = par.scaleX;
-                var par_scale_y = par.scaleY;
-                var par_dir = par.angle;
-                obj.angle += par_dir;
-                var obj_x = obj.posX;
-                var obj_y = obj.posY;
-                obj.posX = par_x +
-                        lengthdir_x(obj_x * par_scale_x, par_dir) +
-                        lengthdir_y(obj_y * par_scale_y, par_dir);
-                obj.posY = par_y +
-                        lengthdir_y(obj_x * par_scale_x, par_dir) +
-                        lengthdir_x(obj_y * par_scale_y, par_dir);
+            var idx_parent = obj.objParent;
+            if (idx_parent != -1) {
+                var obj_parent = __disarm_update_world_transform_using_object_array(_objs, idx_parent);
+                __disarm_update_world_transform(obj, obj_parent);
             }
             break;
         }
@@ -529,18 +557,24 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
     return obj;
 }
 
-/// @desc Updates the world transformation of a specific armature slot using this array of objects.
-/// @param {array} slot The slot to update.
-/// @param {real} parent The parent bone to use.
-function __disarm_update_world_transform_of_slot(_slot, _parent) {
-    switch (_slot.type) {
-    case "sprite":
-        if (_parent != -1) {
-            _slot.posX += _parent.posX;
-            _slot.posY += _parent.posY;
-        }
-        break;
-    }
+/// @desc Updates the world transformation of a specific armature object using this array of objects.
+/// @param {struct} obj The object to update.
+/// @param {struct} parent The parent to use.
+function __disarm_update_world_transform(_obj, _obj_parent) {
+    var par_x = _obj_parent.posX;
+    var par_y = _obj_parent.posY;
+    var par_scale_x = _obj_parent.scaleX;
+    var par_scale_y = _obj_parent.scaleY;
+    var par_dir = _obj_parent.angle;
+    _obj.angle += par_dir;
+    var obj_x = _obj.posX;
+    var obj_y = _obj.posY;
+    _obj.posX = par_x +
+            lengthdir_x(obj_x * par_scale_x, par_dir) +
+            lengthdir_y(obj_y * par_scale_y, par_dir);
+    _obj.posY = par_y +
+            lengthdir_y(obj_x * par_scale_x, par_dir) +
+            lengthdir_x(obj_y * par_scale_y, par_dir);
 }
 
 /// @desc Renders a debug view of the armature.
@@ -552,6 +586,7 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
     var slots = entity.slots;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
+    draw_set_alpha(1);
     if (_matrix != undefined) {
         var default_matrix = matrix_get(matrix_world);
         matrix_set(matrix_world, _matrix);
@@ -580,7 +615,24 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
         var obj = slots[i];
         switch (obj.type) {
         case "sprite":
-            draw_circle(obj.posX, obj.posY, 5, false);
+            var col = c_green;
+            var alpha = 1;
+            draw_primitive_begin(pr_linestrip);
+            draw_vertex_color(obj.aX, obj.aY, col, alpha);
+            draw_vertex_color(obj.bX, obj.bY, col, alpha);
+            draw_vertex_color(obj.cX, obj.cY, col, alpha);
+            draw_vertex_color(obj.dX, obj.dY, col, alpha);
+            draw_vertex_color(obj.aX, obj.aY, col, alpha);
+            draw_primitive_end();
+            var len = 100 * obj.scaleX;
+            var wid = 10 * obj.scaleY;
+            var dir = obj.angle;
+            var x1 = obj.posX;
+            var y1 = obj.posY;
+            var x2 = x1 + lengthdir_x(len, dir);
+            var y2 = y1 + lengthdir_y(len, dir);
+            draw_set_colour(c_orange);
+            draw_arrow(x1, y1, x2, y2, wid);
             break;
         }
     }
