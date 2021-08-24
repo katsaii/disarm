@@ -299,6 +299,25 @@ function disarm_animation_exists(_arm, _anim) {
     return variable_struct_exists(_arm.entities[_arm.currentEntity].animTable, _anim);
 }
 
+/// @desc Returns the linear interpolation of two keyframe times.
+/// @param {real} seek The seek time.
+/// @param {real} start The start frame time.
+/// @param {real} end The end frame time.
+/// @param {real} looping Whether the animation is looping.
+/// @param {real} duration If looping, the duration of the animation.
+function __disarm_animation_calculate_animation_interpolation_between_keyframes(_seek, _start, _end, _looping, _duration) {
+    if (_looping) {
+        // wrap around animation
+        if (_seek < _start) {
+            _seek += _duration;
+        }
+        if (_end < _start) {
+            _end += _duration;
+        }
+    }
+    return clamp((_seek - _start) / (_end - _start), 0, 1);
+}
+
 /// @desc Adds an animation to the armature pose.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} anim The name of the animation to play.
@@ -346,19 +365,8 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             if (key_next == undefined) {
                 key_next = keys[0];
             }
-            var time_mid = time;
-            var time_key = key.time;
-            var time_key_end = key_next.time;
-            if (looping) {
-                // wrap around animation
-                if (time_mid < time_key) {
-                    time_mid += time_duration;
-                }
-                if (time_key_end < time_key) {
-                    time_key_end += time_duration;
-                }
-            }
-            var interp = clamp((time_mid - time_key) / (time_key_end - time_key), 0, 1);
+            var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+                    time, key.time, key_next.time, looping, time_duration);
             pos_x = lerp(pos_x, key_next.posX, interp);
             pos_y = lerp(pos_y, key_next.posY, interp);
             angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
@@ -400,19 +408,8 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             if (key_next == undefined) {
                 key_next = keys[0];
             }
-            var time_mid = time;
-            var time_key = key.time;
-            var time_key_end = key_next.time;
-            if (looping) {
-                // wrap around animation
-                if (time_mid < time_key) {
-                    time_mid += time_duration;
-                }
-                if (time_key_end < time_key) {
-                    time_key_end += time_duration;
-                }
-            }
-            var interp = clamp((time_mid - time_key) / (time_key_end - time_key), 0, 1);
+            var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+                    time, key.time, key_next.time, looping, time_duration);
             pos_x = lerp(pos_x, key_next.posX, interp);
             pos_y = lerp(pos_y, key_next.posY, interp);
             angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
