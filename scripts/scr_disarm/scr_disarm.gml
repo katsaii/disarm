@@ -503,7 +503,7 @@ function disarm_animation_end(_arm) {
                 continue;
             }
             if (obj_parent != undefined) {
-                __disarm_update_world_transform(obj, obj_parent);
+                __disarm_update_world_transform(obj, obj_parent, -1);
             }
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
@@ -520,10 +520,12 @@ function disarm_animation_end(_arm) {
             var obj_scale_x = obj.scaleX;
             var obj_scale_y = obj.scaleY;
             var obj_dir = obj.angle;
-            var i_x = lengthdir_x(obj_scale_x, obj_dir);
-            var i_y = lengthdir_y(obj_scale_x, obj_dir);
-            var j_x = lengthdir_y(obj_scale_y, obj_dir);
-            var j_y = -lengthdir_x(obj_scale_y, obj_dir);
+            var i_ = __disarm_apply_forward_kinematics(1, 0, obj_dir, -1);
+            var j_ = __disarm_apply_forward_kinematics(0, -1, obj_dir, -1);
+            var i_x = i_[0];
+            var i_y = i_[1];
+            var j_x = j_[0];
+            var j_y = j_[1];
             obj.aX = obj_x + left * i_x + top * j_x;
             obj.aY = obj_y + left * i_y + top * j_y;
             obj.bX = obj_x + right * i_x + top * j_x;
@@ -547,7 +549,9 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
         switch (obj.type) {
         case "bone":
             var idx_parent = obj.objParent;
-            if (idx_parent != -1) {
+            if (idx_parent == -1) {
+                obj.posY *= -1;
+            } else {
                 var obj_parent = __disarm_update_world_transform_using_object_array(_objs, idx_parent);
                 __disarm_update_world_transform(obj, obj_parent);
             }
@@ -560,21 +564,35 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
 /// @param {struct} obj The object to update.
 /// @param {struct} parent The parent to use.
-function __disarm_update_world_transform(_obj, _obj_parent) {
+/// @param {real} [up] The direction of the "up" vector.
+function __disarm_update_world_transform(_obj, _obj_parent, _up=1) {
     var par_x = _obj_parent.posX;
     var par_y = _obj_parent.posY;
     var par_scale_x = _obj_parent.scaleX;
     var par_scale_y = _obj_parent.scaleY;
     var par_dir = _obj_parent.angle;
+    var par_alpha = _obj_parent.alpha;
     _obj.angle += par_dir;
+    _obj.scaleX *= par_scale_x;
+    _obj.scaleY *= par_scale_y;
+    _obj.alpha *= par_alpha;
     var obj_x = _obj.posX;
     var obj_y = _obj.posY;
-    _obj.posX = par_x +
-            lengthdir_x(obj_x * par_scale_x, par_dir) +
-            lengthdir_y(obj_y * par_scale_y, par_dir);
-    _obj.posY = par_y +
-            lengthdir_y(obj_x * par_scale_x, par_dir) +
-            lengthdir_x(obj_y * par_scale_y, par_dir);
+    var fk = __disarm_apply_forward_kinematics(obj_x * par_scale_x, obj_y * par_scale_y, par_dir, _up);
+    _obj.posX = par_x + fk[0];
+    _obj.posY = par_y + fk[1];
+}
+
+/// @desc Applies forward kinematics and returns a new point.
+/// @param {real} x The x position to rotate.
+/// @param {real} y The y position to rotate.
+/// @param {real} angle The angle to rotate about.
+/// @param {real} up The direction of the "up" vector.
+function __disarm_apply_forward_kinematics(_x, _y, _angle, _up) {
+    return [
+        lengthdir_x(_x, _angle) + lengthdir_y(_y, _angle),
+        lengthdir_y(_x, _angle) + lengthdir_x(_up * _y, _angle)
+    ];
 }
 
 /// @desc Renders a debug view of the armature.
@@ -615,14 +633,13 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
         var obj = slots[i];
         switch (obj.type) {
         case "sprite":
-            var col = c_green;
             var alpha = 1;
             draw_primitive_begin(pr_linestrip);
-            draw_vertex_color(obj.aX, obj.aY, col, alpha);
-            draw_vertex_color(obj.bX, obj.bY, col, alpha);
-            draw_vertex_color(obj.cX, obj.cY, col, alpha);
-            draw_vertex_color(obj.dX, obj.dY, col, alpha);
-            draw_vertex_color(obj.aX, obj.aY, col, alpha);
+            draw_vertex_color(obj.aX, obj.aY, c_green, alpha);
+            draw_vertex_color(obj.bX, obj.bY, c_blue, alpha);
+            draw_vertex_color(obj.cX, obj.cY, c_lime, alpha);
+            draw_vertex_color(obj.dX, obj.dY, c_aqua, alpha);
+            draw_vertex_color(obj.aX, obj.aY, c_green, alpha);
             draw_primitive_end();
             var len = 100 * obj.scaleX;
             var wid = 10 * obj.scaleY;

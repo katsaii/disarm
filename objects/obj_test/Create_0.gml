@@ -57,7 +57,7 @@ arm = disarm_import_from_string(@'
 								"bone_ref": [
 									{
 										"id": 0,
-										"key": 1,
+										"key": 0,
 										"timeline": 0
 									},
 									{
@@ -65,6 +65,12 @@ arm = disarm_import_from_string(@'
 										"key": 1,
 										"parent": 0,
 										"timeline": 1
+									},
+									{
+										"id": 2,
+										"key": 0,
+										"parent": 1,
+										"timeline": 5
 									}
 								],
 								"id": 1,
@@ -82,9 +88,161 @@ arm = disarm_import_from_string(@'
 										"parent": 1,
 										"timeline": "3",
 										"z_index": "1"
+									},
+									{
+										"id": 2,
+										"key": 1,
+										"parent": 1,
+										"timeline": "4",
+										"z_index": "2"
+									}
+								],
+								"time": 288
+							},
+							{
+								"bone_ref": [
+									{
+										"id": 0,
+										"key": 0,
+										"timeline": 0
+									},
+									{
+										"id": 1,
+										"key": 1,
+										"parent": 0,
+										"timeline": 1
+									},
+									{
+										"id": 2,
+										"key": 1,
+										"parent": 1,
+										"timeline": 5
+									}
+								],
+								"id": 2,
+								"object_ref": [
+									{
+										"id": 0,
+										"key": 0,
+										"parent": 0,
+										"timeline": "2",
+										"z_index": "0"
+									},
+									{
+										"id": 1,
+										"key": 0,
+										"parent": 1,
+										"timeline": "3",
+										"z_index": "1"
+									},
+									{
+										"id": 2,
+										"key": 2,
+										"parent": 1,
+										"timeline": "4",
+										"z_index": "2"
+									}
+								],
+								"time": 404
+							},
+							{
+								"bone_ref": [
+									{
+										"id": 0,
+										"key": 1,
+										"timeline": 0
+									},
+									{
+										"id": 1,
+										"key": 2,
+										"parent": 0,
+										"timeline": 1
+									}
+								],
+								"id": 3,
+								"object_ref": [
+									{
+										"id": 0,
+										"key": 0,
+										"parent": 0,
+										"timeline": "2",
+										"z_index": "0"
+									},
+									{
+										"id": 1,
+										"key": 0,
+										"parent": 1,
+										"timeline": "3",
+										"z_index": "1"
 									}
 								],
 								"time": 498
+							},
+							{
+								"bone_ref": [
+									{
+										"id": 0,
+										"key": 2,
+										"timeline": 0
+									},
+									{
+										"id": 1,
+										"key": 2,
+										"parent": 0,
+										"timeline": 1
+									}
+								],
+								"id": 4,
+								"object_ref": [
+									{
+										"id": 0,
+										"key": 0,
+										"parent": 0,
+										"timeline": "2",
+										"z_index": "0"
+									},
+									{
+										"id": 1,
+										"key": 0,
+										"parent": 1,
+										"timeline": "3",
+										"z_index": "1"
+									}
+								],
+								"time": 591
+							},
+							{
+								"bone_ref": [
+									{
+										"id": 0,
+										"key": 3,
+										"timeline": 0
+									},
+									{
+										"id": 1,
+										"key": 3,
+										"parent": 0,
+										"timeline": 1
+									}
+								],
+								"id": 5,
+								"object_ref": [
+									{
+										"id": 0,
+										"key": 0,
+										"parent": 0,
+										"timeline": "2",
+										"z_index": "0"
+									},
+									{
+										"id": 1,
+										"key": 0,
+										"parent": 1,
+										"timeline": "3",
+										"z_index": "1"
+									}
+								],
+								"time": 732
 							}
 						]
 					},
@@ -110,6 +268,25 @@ arm = disarm_import_from_string(@'
 									"id": 1,
 									"spin": -1,
 									"time": 498
+								},
+								{
+									"bone": {
+										"angle": 28.073700653401943,
+										"x": 1.1866525213009353,
+										"y": -31.624573152537877
+									},
+									"id": 2,
+									"spin": -1,
+									"time": 591
+								},
+								{
+									"bone": {
+										"angle": 0.10297815861946447,
+										"x": 0.3299281372505627,
+										"y": -0.3275967479039199
+									},
+									"id": 3,
+									"time": 732
 								}
 							],
 							"name": "bone_000",
@@ -130,14 +307,35 @@ arm = disarm_import_from_string(@'
 								},
 								{
 									"bone": {
-										"angle": 70.09934455647362,
+										"angle": 69.52736914714802,
 										"scale_x": 0.6,
 										"x": 67.35788366772577,
 										"y": -0.12975746004784378
 									},
 									"id": 1,
+									"time": 288
+								},
+								{
+									"bone": {
+										"angle": 70.09934455647362,
+										"scale_x": 0.6,
+										"x": 67.35788366772577,
+										"y": -0.12975746004784378
+									},
+									"id": 2,
 									"spin": -1,
 									"time": 498
+								},
+								{
+									"bone": {
+										"angle": 67.82967321110169,
+										"scale_x": 0.6,
+										"x": 71.15639219105495,
+										"y": 17.3291970777716
+									},
+									"id": 3,
+									"spin": -1,
+									"time": 732
 								}
 							],
 							"name": "bone_001",
@@ -190,10 +388,59 @@ arm = disarm_import_from_string(@'
 										"y": -1.009449613697458
 									},
 									"spin": 0
+								},
+								{
+									"id": 1,
+									"object": {
+										"angle": 346.2560845026678,
+										"x": 120.46388652117382,
+										"y": -1.009449613697458
+									},
+									"spin": 0,
+									"time": 288
+								},
+								{
+									"id": 2,
+									"object": {
+										"angle": 346.2560845026678,
+										"x": 120.46388652117382,
+										"y": -1.009449613697458
+									},
+									"spin": 0,
+									"time": 404
 								}
 							],
 							"name": "point_000",
 							"object_type": "point"
+						},
+						{
+							"id": 5,
+							"key": [
+								{
+									"bone": {
+										"angle": 286.5684518765045,
+										"scale_x": 1.6666666666666667,
+										"x": 118.52492556060353,
+										"y": -2.971598168917839
+									},
+									"id": 0,
+									"spin": -1,
+									"time": 288
+								},
+								{
+									"bone": {
+										"angle": 273.08054786979835,
+										"scale_x": 1.6666666666666667,
+										"x": 118.52492556060353,
+										"y": -2.971598168917839
+									},
+									"id": 1,
+									"time": 404
+								}
+							],
+							"name": "bone_002",
+							"obj": 2,
+							"object_type": "bone"
 						}
 					]
 				}
@@ -213,6 +460,12 @@ arm = disarm_import_from_string(@'
 					"name": "bone_001",
 					"type": "bone",
 					"w": 128.95369892739242
+				},
+				{
+					"h": 10,
+					"name": "bone_002",
+					"type": "bone",
+					"w": 63.269724505741856
 				}
 			]
 		}
