@@ -476,9 +476,17 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
 /// @desc Updates the world transformation of armature objects.
 /// @param {struct} arm The Disarm instance to update.
 function disarm_animation_end(_arm) {
-    var objs = _arm.entities[_arm.currentEntity].objs;
+    var entity = _arm.entities[_arm.currentEntity];
+    var objs = entity.objs;
+    var slots = entity.slots;
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(objs, i);
+    }
+    for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
+        var obj = slots[i];
+        var idx_parent = obj.objParent;
+        var obj_parent = idx_parent == -1 ? -1 : objs[idx_parent];
+        __disarm_update_world_transform_of_slot(obj, obj_parent);
     }
 }
 
@@ -513,6 +521,20 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
         }
     }
     return obj;
+}
+
+/// @desc Updates the world transformation of a specific armature slot using this array of objects.
+/// @param {array} slot The slot to update.
+/// @param {real} parent The parent bone to use.
+function __disarm_update_world_transform_of_slot(_slot, _parent) {
+    switch (_slot.type) {
+    case "sprite":
+        if (_parent != -1) {
+            _slot.posX += _parent.posX;
+            _slot.posY += _parent.posY;
+        }
+        break;
+    }
 }
 
 /// @desc Renders a debug view of the armature.
