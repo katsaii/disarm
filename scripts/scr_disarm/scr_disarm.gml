@@ -585,11 +585,11 @@ function __disarm_update_world_transform(_obj, _obj_parent) {
 /// @param {real} x The x position to rotate.
 /// @param {real} y The y position to rotate.
 /// @param {real} angle The angle to rotate about.
-/// @param {real} up The direction of the "up" vector.
 function __disarm_apply_forward_kinematics(_x, _y, _angle) {
-    var mag = point_distance(0, 0, _x, _y);
-    var dir = point_direction(0, 0, _x, _y) + _angle;
-    return [lengthdir_x(mag, dir), lengthdir_y(mag, dir)];
+    return [
+        lengthdir_x(_x, _angle) + lengthdir_x(_y, _angle - 90),
+        lengthdir_y(_x, _angle) + lengthdir_y(_y, _angle - 90)
+    ];
 }
 
 /// @desc Renders a debug view of the armature.
