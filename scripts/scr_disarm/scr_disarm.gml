@@ -582,6 +582,17 @@ function disarm_animation_end(_arm) {
             break;
         }
     }
+    array_sort(slots, function(_a, _b) {
+        var a_z = _a.zIndex;
+        var b_z = _b.zIndex;
+        if (a_z < b_z) {
+            return -1;
+        } else if (a_z > b_z) {
+            return 1;
+        } else {
+            return 0;
+        }
+    });
 }
 
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
@@ -675,23 +686,28 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
         switch (slot.type) {
         case "sprite":
             var alpha = 1;
+            var col = c_green;
             draw_primitive_begin(pr_linestrip);
-            draw_vertex_color(slot.aX, slot.aY, c_green, alpha);
-            draw_vertex_color(slot.bX, slot.bY, c_blue, alpha);
-            draw_vertex_color(slot.cX, slot.cY, c_lime, alpha);
-            draw_vertex_color(slot.dX, slot.dY, c_aqua, alpha);
-            draw_vertex_color(slot.aX, slot.aY, c_green, alpha);
+            draw_vertex_color(slot.aX, slot.aY, col, alpha);
+            draw_vertex_color(slot.bX, slot.bY, col, alpha);
+            draw_vertex_color(slot.cX, slot.cY, col, alpha);
+            draw_vertex_color(slot.dX, slot.dY, col, alpha);
+            draw_vertex_color(slot.aX, slot.aY, col, 0);
             draw_primitive_end();
+            draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
             break;
         case "point":
+            var alpha = 1;
+            var col = c_orange;
             var r = 10;
             var x1 = slot.posX;
             var y1 = slot.posY;
             var dir = slot.angle;
             var x2 = x1 + lengthdir_x(r, dir);
             var y2 = y1 + lengthdir_y(r, dir);
-            draw_circle_colour(x1, y1, r, c_orange, c_orange, true);
-            draw_circle_colour(x2, y2, r / 2, c_orange, c_orange, false);
+            draw_circle_colour(x1, y1, r, col, col, true);
+            draw_circle_colour(x2, y2, r / 2, col, col, false);
+            draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
             break;
         }
     }
