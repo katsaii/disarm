@@ -552,9 +552,7 @@ function disarm_animation_end(_arm) {
             if (idx_folder == -1 || idx_file == -1) {
                 continue;
             }
-            if (obj_parent != undefined) {
-                __disarm_update_world_transform(obj, obj_parent);
-            }
+            __disarm_update_world_transform(obj, obj_parent);
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
             var height = file.height;
@@ -586,9 +584,7 @@ function disarm_animation_end(_arm) {
             obj.dY = obj_y + left * i_y + bottom * j_y;
             break;
         case "point":
-            if (obj_parent != undefined) {
-                __disarm_update_world_transform(obj, obj_parent);
-            }
+            __disarm_update_world_transform(obj, obj_parent);
             break;
         }
     }
@@ -604,10 +600,8 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
         switch (obj.type) {
         case "bone":
             var idx_parent = obj.objParent;
-            if (idx_parent != -1) {
-                var obj_parent = __disarm_update_world_transform_using_object_array(_objs, idx_parent);
-                __disarm_update_world_transform(obj, obj_parent);
-            }
+            var obj_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(_objs, idx_parent);
+            __disarm_update_world_transform(obj, obj_parent);
             break;
         }
     }
@@ -619,6 +613,9 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
 /// @param {struct} parent The parent to use.
 /// @param {real} [up] The direction of the "up" vector.
 function __disarm_update_world_transform(_obj, _obj_parent) {
+    if (_obj_parent == undefined) {
+        return;
+    }
     var par_x = _obj_parent.posX;
     var par_y = _obj_parent.posY;
     var par_scale_x = _obj_parent.scaleX;
