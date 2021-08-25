@@ -206,6 +206,7 @@ function __disarm_import_entity_animation_timeline(_struct) {
     switch (type) {
     case "bone": f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
     case "sprite": f = __disarm_import_entity_animation_timeline_keyframe_sprite; break;
+    case "point": f = __disarm_import_entity_animation_timeline_keyframe_point; break;
     }
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
@@ -252,6 +253,20 @@ function __disarm_import_entity_animation_timeline_keyframe_sprite(_struct) {
     key.scaleY = __disarm_struct_get_numeric_or_default(obj, "scale_y", 1);
     key.pivotX = __disarm_struct_get_numeric_or_default(obj, "pivot_x");
     key.pivotY = __disarm_struct_get_numeric_or_default(obj, "pivot_y", 1);
+    key.alpha = __disarm_struct_get_numeric_or_default(obj, "a", 1);
+    return key;
+}
+
+/// @desc Creates a new Disarm entity animation definition for a point keyframe.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_timeline_keyframe_point(_struct) {
+    var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
+    var obj = __disarm_struct_get_struct(_struct, "object");
+    key.posX = __disarm_struct_get_numeric_or_default(obj, "x");
+    key.posY = -__disarm_struct_get_numeric_or_default(obj, "y");
+    key.angle = __disarm_struct_get_numeric_or_default(obj, "angle");
+    key.scaleX = __disarm_struct_get_numeric_or_default(obj, "scale_x", 1);
+    key.scaleY = __disarm_struct_get_numeric_or_default(obj, "scale_y", 1);
     key.alpha = __disarm_struct_get_numeric_or_default(obj, "a", 1);
     return key;
 }
@@ -323,6 +338,16 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
                 aY : 0, bY : 0, cY : 0, dY : 0,
             };
             break;
+        case "point":
+            obj = {
+                posX : 0,
+                posY : 0,
+                angle : 0,
+                scaleX : 1,
+                scaleY : 1,
+                alpha : 1,
+            };
+            break;
         default:
             obj = { };
             break;
@@ -347,7 +372,6 @@ function disarm_animation_begin(_arm) {
     for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
         var obj = objs[i];
         obj.active = false;
-        obj.slotCount = 0;
         switch (obj.type) {
         case "bone":
             obj.invalidWorldTransform = true;
@@ -475,6 +499,32 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             obj.pivotY = pivot_y;
             obj.alpha = alpha;
             break;
+        case "point":
+            // get interpolation
+            var pos_x = key.posX;
+            var pos_y = key.posY;
+            var angle = key.angle;
+            var scale_x = key.scaleX;
+            var scale_y = key.scaleY;
+            var alpha = key.alpha;
+            if (key_next != undefined) {
+                var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+                        time, key.time, key_next.time, looping, time_duration);
+                pos_x = lerp(pos_x, key_next.posX, interp);
+                pos_y = lerp(pos_y, key_next.posY, interp);
+                angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
+                scale_x = lerp(scale_x, key_next.scaleX, interp);
+                scale_y = lerp(scale_y, key_next.scaleY, interp);
+                alpha = lerp(pos_y, key_next.posY, interp);
+            }
+            // apply transformations
+            obj.posX = pos_x;
+            obj.posY = pos_y;
+            obj.angle = angle;
+            obj.scaleX = scale_x;
+            obj.scaleY = scale_y;
+            obj.alpha = alpha;
+            break;
         }
         obj.objParent = obj_ref.objParent;
         obj.zIndex = obj_ref.zIndex;
@@ -534,6 +584,11 @@ function disarm_animation_end(_arm) {
             obj.cY = obj_y + right * i_y + bottom * j_y;
             obj.dX = obj_x + left * i_x + bottom * j_x;
             obj.dY = obj_y + left * i_y + bottom * j_y;
+            break;
+        case "point":
+            if (obj_parent != undefined) {
+                __disarm_update_world_transform(obj, obj_parent);
+            }
             break;
         }
     }
@@ -638,15 +693,16 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
             draw_vertex_color(obj.dX, obj.dY, c_aqua, alpha);
             draw_vertex_color(obj.aX, obj.aY, c_green, alpha);
             draw_primitive_end();
-            var len = 100 * obj.scaleX;
-            var wid = 10 * obj.scaleY;
-            var dir = obj.angle;
+            break;
+        case "point":
+            var r = 10;
             var x1 = obj.posX;
             var y1 = obj.posY;
-            var x2 = x1 + lengthdir_x(len, dir);
-            var y2 = y1 + lengthdir_y(len, dir);
-            draw_set_colour(c_orange);
-            draw_arrow(x1, y1, x2, y2, wid);
+            var dir = obj.angle;
+            var x2 = x1 + lengthdir_x(r, dir);
+            var y2 = y1 + lengthdir_y(r, dir);
+            draw_circle_colour(x1, y1, r, c_orange, c_orange, true);
+            draw_circle_colour(x2, y2, r / 2, c_orange, c_orange, false);
             break;
         }
     }
