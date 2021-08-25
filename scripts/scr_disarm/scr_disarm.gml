@@ -101,6 +101,7 @@ function __disarm_import_entity(_struct) {
                 __disarm_struct_get_array(_struct, "obj_info"),
                 __disarm_import_entity_object),
         slots : [],
+        slotsDrawOrder : [],
         slotTable : { },
         anims : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "animation"),
@@ -582,7 +583,9 @@ function disarm_animation_end(_arm) {
             break;
         }
     }
-    array_sort(slots, function(_a, _b) {
+    var draw_order = __disarm_wierd_hack_for_array_clone(slots);
+    entity.slotsDrawOrder = draw_order;
+    array_sort(draw_order, function(_a, _b) {
         var a_z = _a.zIndex;
         var b_z = _b.zIndex;
         if (a_z < b_z) {
@@ -593,6 +596,16 @@ function disarm_animation_end(_arm) {
             return 0;
         }
     });
+}
+
+/// @desc Returns a clone of an array.
+/// @param variable {Array} The array to clone.
+function __disarm_wierd_hack_for_array_clone(_in) {
+    if (array_length(_in) < 1) {
+        return [];
+    }
+    _in[0] = _in[0];
+    return _in;
 }
 
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
@@ -653,7 +666,7 @@ function __disarm_apply_forward_kinematics(_x, _y, _angle) {
 function disarm_draw_debug(_arm, _matrix=undefined) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
-    var slots = entity.slots;
+    var slots = entity.slotsDrawOrder;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
     draw_set_alpha(1);
