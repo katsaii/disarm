@@ -97,7 +97,7 @@ function __disarm_import_folder(_struct) {
 function __disarm_import_entity(_struct) {
     var entity = {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
-        objs : __disarm_array_map(
+        info : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "obj_info"),
                 __disarm_import_entity_object),
         slots : [],
@@ -123,11 +123,11 @@ function __disarm_import_entity_object(_struct) {
     switch (type) {
     case "bone": f = __disarm_import_entity_object_bone; break;
     }
-    var obj = f == undefined ? { } : f(_struct);
-    obj.name = __disarm_struct_get_string_or_default(_struct, "name");
-    obj.type = type;
-    obj.active = true;
-    return obj;
+    var inst = f == undefined ? { } : f(_struct);
+    inst.name = __disarm_struct_get_string_or_default(_struct, "name");
+    inst.type = type;
+    inst.active = true;
+    return inst;
 }
 
 /// @desc Creates a new Disarm entity object definition.
@@ -141,7 +141,7 @@ function __disarm_import_entity_object_bone(_struct) {
         scaleY : 1,
         posX : 0,
         posY : 0,
-        objParent : -1,
+        boneParent : -1,
         invalidWorldTransform : true,
     };
 }
@@ -176,11 +176,11 @@ function __disarm_import_entity_animation_mainline(_struct) {
 function __disarm_import_entity_animation_mainline_keyframe(_struct) {
     return {
         time : __disarm_struct_get_numeric_or_default(_struct, "time"),
-        objs : __disarm_array_map(
+        slots : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "object_ref"),
                 function(_struct) {
                     return {
-                        objParent : __disarm_struct_get_numeric_or_default(_struct, "parent", -1),
+                        boneParent : __disarm_struct_get_numeric_or_default(_struct, "parent", -1),
                         key : __disarm_struct_get_numeric_or_default(_struct, "key", -1),
                         timeline : __disarm_struct_get_numeric_or_default(_struct, "timeline", -1),
                         zIndex : __disarm_struct_get_numeric_or_default(_struct, "z_index", 0),
@@ -190,7 +190,7 @@ function __disarm_import_entity_animation_mainline_keyframe(_struct) {
                 __disarm_struct_get_array(_struct, "bone_ref"),
                 function(_struct) {
                     return {
-                        objParent : __disarm_struct_get_numeric_or_default(_struct, "parent", -1),
+                        boneParent : __disarm_struct_get_numeric_or_default(_struct, "parent", -1),
                         key : __disarm_struct_get_numeric_or_default(_struct, "key", -1),
                         timeline : __disarm_struct_get_numeric_or_default(_struct, "timeline", -1),
                     };
@@ -210,7 +210,7 @@ function __disarm_import_entity_animation_timeline(_struct) {
     }
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
-        obj : __disarm_struct_get_numeric_or_default(_struct, "obj", -1),
+        inst : __disarm_struct_get_numeric_or_default(_struct, "obj", -1),
         type : type,
         keys : __disarm_array_map(__disarm_struct_get_array(_struct, "key"), f),
     }
@@ -243,17 +243,17 @@ function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline_keyframe_sprite(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
-    var obj = __disarm_struct_get_struct(_struct, "object");
-    key.folder = __disarm_struct_get_numeric_or_default(obj, "folder");
-    key.file = __disarm_struct_get_numeric_or_default(obj, "file");
-    key.posX = __disarm_struct_get_numeric_or_default(obj, "x");
-    key.posY = -__disarm_struct_get_numeric_or_default(obj, "y");
-    key.angle = __disarm_struct_get_numeric_or_default(obj, "angle");
-    key.scaleX = __disarm_struct_get_numeric_or_default(obj, "scale_x", 1);
-    key.scaleY = __disarm_struct_get_numeric_or_default(obj, "scale_y", 1);
-    key.pivotX = __disarm_struct_get_numeric_or_default(obj, "pivot_x");
-    key.pivotY = __disarm_struct_get_numeric_or_default(obj, "pivot_y", 1);
-    key.alpha = __disarm_struct_get_numeric_or_default(obj, "a", 1);
+    var slot = __disarm_struct_get_struct(_struct, "object");
+    key.folder = __disarm_struct_get_numeric_or_default(slot, "folder");
+    key.file = __disarm_struct_get_numeric_or_default(slot, "file");
+    key.posX = __disarm_struct_get_numeric_or_default(slot, "x");
+    key.posY = -__disarm_struct_get_numeric_or_default(slot, "y");
+    key.angle = __disarm_struct_get_numeric_or_default(slot, "angle");
+    key.scaleX = __disarm_struct_get_numeric_or_default(slot, "scale_x", 1);
+    key.scaleY = __disarm_struct_get_numeric_or_default(slot, "scale_y", 1);
+    key.pivotX = __disarm_struct_get_numeric_or_default(slot, "pivot_x");
+    key.pivotY = __disarm_struct_get_numeric_or_default(slot, "pivot_y", 1);
+    key.alpha = __disarm_struct_get_numeric_or_default(slot, "a", 1);
     return key;
 }
 
@@ -261,13 +261,13 @@ function __disarm_import_entity_animation_timeline_keyframe_sprite(_struct) {
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_entity_animation_timeline_keyframe_point(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
-    var obj = __disarm_struct_get_struct(_struct, "object");
-    key.posX = __disarm_struct_get_numeric_or_default(obj, "x");
-    key.posY = -__disarm_struct_get_numeric_or_default(obj, "y");
-    key.angle = __disarm_struct_get_numeric_or_default(obj, "angle");
-    key.scaleX = __disarm_struct_get_numeric_or_default(obj, "scale_x", 1);
-    key.scaleY = __disarm_struct_get_numeric_or_default(obj, "scale_y", 1);
-    key.alpha = __disarm_struct_get_numeric_or_default(obj, "a", 1);
+    var slot = __disarm_struct_get_struct(_struct, "object");
+    key.posX = __disarm_struct_get_numeric_or_default(slot, "x");
+    key.posY = -__disarm_struct_get_numeric_or_default(slot, "y");
+    key.angle = __disarm_struct_get_numeric_or_default(slot, "angle");
+    key.scaleX = __disarm_struct_get_numeric_or_default(slot, "scale_x", 1);
+    key.scaleY = __disarm_struct_get_numeric_or_default(slot, "scale_y", 1);
+    key.alpha = __disarm_struct_get_numeric_or_default(slot, "a", 1);
     return key;
 }
 
@@ -320,10 +320,10 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
     if (variable_struct_exists(_slot_table, _name)) {
         return _slot_table[$ _name];
     } else {
-        var obj;
+        var slot;
         switch (_type) {
         case "sprite":
-            obj = {
+            slot = {
                 folder : -1,
                 file : -1,
                 posX : 0,
@@ -339,7 +339,7 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
             };
             break;
         case "point":
-            obj = {
+            slot = {
                 posX : 0,
                 posY : 0,
                 angle : 0,
@@ -349,16 +349,16 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
             };
             break;
         default:
-            obj = { };
+            slot = { };
             break;
         }
-        obj[$ "name"] = _name;
-        obj[$ "type"] = _type;
-        obj[$ "objParent"] = -1;
-        obj[$ "zIndex"] = 0;
-        _slot_table[$ _name] = obj;
-        array_push(_slots, obj);
-        return obj;
+        slot[$ "name"] = _name;
+        slot[$ "type"] = _type;
+        slot[$ "boneParent"] = -1;
+        slot[$ "zIndex"] = 0;
+        _slot_table[$ _name] = slot;
+        array_push(_slots, slot);
+        return slot;
     }
 }
 
@@ -368,19 +368,19 @@ function disarm_animation_begin(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
     entity.slots = [];
     entity.slotTable = { };
-    var objs = entity.objs;
-    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
-        var obj = objs[i];
-        obj.active = false;
-        switch (obj.type) {
+    var info = entity.info;
+    for (var i = array_length(info) - 1; i >= 0; i -= 1) {
+        var inst = info[i];
+        inst.active = false;
+        switch (inst.type) {
         case "bone":
-            obj.invalidWorldTransform = true;
-            obj.angle = 0;
-            obj.scaleX = 1;
-            obj.scaleY = 1;
-            obj.posX = 0;
-            obj.posY = 0;
-            obj.objParent = -1;
+            inst.invalidWorldTransform = true;
+            inst.angle = 0;
+            inst.scaleX = 1;
+            inst.scaleY = 1;
+            inst.posX = 0;
+            inst.posY = 0;
+            inst.boneParent = -1;
             break;
         }
     }
@@ -393,7 +393,7 @@ function disarm_animation_begin(_arm) {
 /// @param {real} [blend_mode] The blend mode to use when applying the animation.
 function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var entity = _arm.entities[_arm.currentEntity];
-    var objs = entity.objs;
+    var info = entity.info;
     var slots = entity.slots;
     var slot_table = entity.slotTable;
     var anim = entity.anims[entity.animTable[$ _anim]];
@@ -440,7 +440,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             alpha = lerp(pos_y, key_next.posY, interp);
         }
         // apply transformations
-        var bone = objs[timeline.obj];
+        var bone = info[timeline.inst];
         bone.active = true; // enables the bone visibility
         bone.posX = pos_x;
         bone.posY = pos_y;
@@ -448,20 +448,20 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
         bone.scaleX = scale_x;
         bone.scaleY = scale_y;
         bone.alpha = alpha;
-        bone.objParent = bone_ref.objParent;
+        bone.boneParent = bone_ref.boneParent;
     }
     // apply object animations
-    var obj_refs = mainframe.objs;
-    var obj_ref_count = array_length(obj_refs);
-    for (var i = 0; i < obj_ref_count; i += 1) {
-        var obj_ref = obj_refs[i];
-        var timeline = timelines[obj_ref.timeline];
+    var slot_refs = mainframe.slots;
+    var slot_ref_count = array_length(slot_refs);
+    for (var i = 0; i < slot_ref_count; i += 1) {
+        var slot_ref = slot_refs[i];
+        var timeline = timelines[slot_ref.timeline];
         var keys = timeline.keys;
         var type = timeline.type;
-        var idx_key = obj_ref.key;
+        var idx_key = slot_ref.key;
         var key = keys[idx_key];
         var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : (looping ? keys[0] : undefined);
-        var obj = __disarm_animation_get_slot_by_name_or_spawn_new(timeline.name, type, slot_table, slots);
+        var slot = __disarm_animation_get_slot_by_name_or_spawn_new(timeline.name, type, slot_table, slots);
         switch (type) {
         case "sprite":
             // get interpolation
@@ -488,16 +488,16 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
                 alpha = lerp(pos_y, key_next.posY, interp);
             }
             // apply transformations
-            obj.folder = folder;
-            obj.file = file;
-            obj.posX = pos_x;
-            obj.posY = pos_y;
-            obj.angle = angle;
-            obj.scaleX = scale_x;
-            obj.scaleY = scale_y;
-            obj.pivotX = pivot_x;
-            obj.pivotY = pivot_y;
-            obj.alpha = alpha;
+            slot.folder = folder;
+            slot.file = file;
+            slot.posX = pos_x;
+            slot.posY = pos_y;
+            slot.angle = angle;
+            slot.scaleX = scale_x;
+            slot.scaleY = scale_y;
+            slot.pivotX = pivot_x;
+            slot.pivotY = pivot_y;
+            slot.alpha = alpha;
             break;
         case "point":
             // get interpolation
@@ -518,16 +518,16 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
                 alpha = lerp(pos_y, key_next.posY, interp);
             }
             // apply transformations
-            obj.posX = pos_x;
-            obj.posY = pos_y;
-            obj.angle = angle;
-            obj.scaleX = scale_x;
-            obj.scaleY = scale_y;
-            obj.alpha = alpha;
+            slot.posX = pos_x;
+            slot.posY = pos_y;
+            slot.angle = angle;
+            slot.scaleX = scale_x;
+            slot.scaleY = scale_y;
+            slot.alpha = alpha;
             break;
         }
-        obj.objParent = obj_ref.objParent;
-        obj.zIndex = obj_ref.zIndex;
+        slot.boneParent = slot_ref.boneParent;
+        slot.zIndex = slot_ref.zIndex;
     }
 }
 
@@ -535,100 +535,92 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
 /// @param {struct} arm The Disarm instance to update.
 function disarm_animation_end(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
-    var objs = entity.objs;
+    var info = entity.info;
     var slots = entity.slots;
     var folders = _arm.folders;
-    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
-        __disarm_update_world_transform_using_object_array(objs, i);
+    for (var i = array_length(info) - 1; i >= 0; i -= 1) {
+        __disarm_update_world_transform_using_object_array(info, i);
     }
     for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
-        var obj = slots[i];
-        var idx_parent = obj.objParent;
-        var obj_parent = idx_parent == -1 ? undefined : objs[idx_parent];
-        switch (obj.type) {
+        var slot = slots[i];
+        var idx_parent = slot.boneParent;
+        var bone_parent = idx_parent == -1 ? undefined : info[idx_parent];
+        switch (slot.type) {
         case "sprite":
-            var idx_folder = obj.folder;
-            var idx_file = obj.file;
+            var idx_folder = slot.folder;
+            var idx_file = slot.file;
             if (idx_folder == -1 || idx_file == -1) {
                 continue;
             }
-            __disarm_update_world_transform(obj, obj_parent);
+            __disarm_update_world_transform(slot, bone_parent);
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
-            var height = file.height;
-            var width = file.width;
-            var pivot_x = file.pivotX;
-            var pivot_y = file.pivotY;
-            var left = -pivot_x;
-            var top = -pivot_y;
-            var right = left + width;
-            var bottom = top + height;
-            var obj_x = obj.posX;
-            var obj_y = obj.posY;
-            var obj_scale_x = obj.scaleX;
-            var obj_scale_y = obj.scaleY;
-            var obj_dir = obj.angle;
-            var i_ = __disarm_apply_forward_kinematics(1, 0, obj_dir);
-            var j_ = __disarm_apply_forward_kinematics(0, 1, obj_dir);
-            var i_x = i_[0];
-            var i_y = i_[1];
-            var j_x = j_[0];
-            var j_y = j_[1];
-            obj.aX = obj_x + left * i_x + top * j_x;
-            obj.aY = obj_y + left * i_y + top * j_y;
-            obj.bX = obj_x + right * i_x + top * j_x;
-            obj.bY = obj_y + right * i_y + top * j_y;
-            obj.cX = obj_x + right * i_x + bottom * j_x;
-            obj.cY = obj_y + right * i_y + bottom * j_y;
-            obj.dX = obj_x + left * i_x + bottom * j_x;
-            obj.dY = obj_y + left * i_y + bottom * j_y;
+            var left = -file.pivotX;
+            var top = -file.pivotY;
+            var right = left + file.width;
+            var bottom = top + file.height;
+            var slot_x = slot.posX;
+            var slot_y = slot.posY;
+            var slot_scale_x = slot.scaleX;
+            var slot_scale_y = slot.scaleY;
+            var slot_dir = slot.angle;
+            var i_x = lengthdir_x(slot_scale_x, slot_dir);
+            var i_y = lengthdir_y(slot_scale_x, slot_dir);
+            var j_x = lengthdir_x(slot_scale_y, slot_dir - 90);
+            var j_y = lengthdir_y(slot_scale_y, slot_dir - 90);
+            slot.aX = slot_x + left * i_x + top * j_x;
+            slot.aY = slot_y + left * i_y + top * j_y;
+            slot.bX = slot_x + right * i_x + top * j_x;
+            slot.bY = slot_y + right * i_y + top * j_y;
+            slot.cX = slot_x + right * i_x + bottom * j_x;
+            slot.cY = slot_y + right * i_y + bottom * j_y;
+            slot.dX = slot_x + left * i_x + bottom * j_x;
+            slot.dY = slot_y + left * i_y + bottom * j_y;
             break;
         case "point":
-            __disarm_update_world_transform(obj, obj_parent);
+            __disarm_update_world_transform(slot, bone_parent);
             break;
         }
     }
 }
 
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
-/// @param {array} objs The object array.
+/// @param {array} info The object array.
 /// @param {real} id The object index.
 function __disarm_update_world_transform_using_object_array(_objs, _idx) {
-    var obj = _objs[_idx];
-    if (obj.invalidWorldTransform && obj.active) {
-        obj.invalidWorldTransform = false;
-        switch (obj.type) {
+    var bone = _objs[_idx];
+    if (bone.invalidWorldTransform && bone.active) {
+        bone.invalidWorldTransform = false;
+        switch (bone.type) {
         case "bone":
-            var idx_parent = obj.objParent;
-            var obj_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(_objs, idx_parent);
-            __disarm_update_world_transform(obj, obj_parent);
+            var idx_parent = bone.boneParent;
+            var bone_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(_objs, idx_parent);
+            __disarm_update_world_transform(bone, bone_parent);
             break;
         }
     }
-    return obj;
+    return bone;
 }
 
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
-/// @param {struct} obj The object to update.
+/// @param {struct} child The object to update.
 /// @param {struct} parent The parent to use.
 /// @param {real} [up] The direction of the "up" vector.
-function __disarm_update_world_transform(_obj, _obj_parent) {
-    if (_obj_parent == undefined) {
+function __disarm_update_world_transform(_obj, _bone_parent) {
+    if (_bone_parent == undefined) {
         return;
     }
-    var par_x = _obj_parent.posX;
-    var par_y = _obj_parent.posY;
-    var par_scale_x = _obj_parent.scaleX;
-    var par_scale_y = _obj_parent.scaleY;
-    var par_dir = _obj_parent.angle;
-    var par_alpha = _obj_parent.alpha;
+    var par_x = _bone_parent.posX;
+    var par_y = _bone_parent.posY;
+    var par_scale_x = _bone_parent.scaleX;
+    var par_scale_y = _bone_parent.scaleY;
+    var par_dir = _bone_parent.angle;
+    var par_alpha = _bone_parent.alpha;
     _obj.angle += par_dir;
     _obj.scaleX *= par_scale_x;
     _obj.scaleY *= par_scale_y;
     _obj.alpha *= par_alpha;
-    var obj_x = _obj.posX;
-    var obj_y = _obj.posY;
-    var fk = __disarm_apply_forward_kinematics(obj_x * par_scale_x, obj_y * par_scale_y, par_dir);
+    var fk = __disarm_apply_forward_kinematics(_obj.posX * par_scale_x, _obj.posY * par_scale_y, par_dir);
     _obj.posX = par_x + fk[0];
     _obj.posY = par_y + fk[1];
 }
@@ -649,7 +641,7 @@ function __disarm_apply_forward_kinematics(_x, _y, _angle) {
 /// @param {matrix} transform The global transformation to apply to this armature.
 function disarm_draw_debug(_arm, _matrix=undefined) {
     var entity = _arm.entities[_arm.currentEntity];
-    var objs = entity.objs;
+    var info = entity.info;
     var slots = entity.slots;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
@@ -659,43 +651,43 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
         matrix_set(matrix_world, _matrix);
         _matrix = default_matrix;
     }
-    for (var i = array_length(objs) - 1; i >= 0; i -= 1) {
-        var obj = objs[i];
-        if not (obj.active) {
+    for (var i = array_length(info) - 1; i >= 0; i -= 1) {
+        var inst = info[i];
+        if not (inst.active) {
             continue;
         }
-        switch (obj.type) {
+        switch (inst.type) {
         case "bone":
-            var len = obj.width * obj.scaleX;
-            var wid = obj.height * obj.scaleY;
-            var dir = obj.angle;
-            var x1 = obj.posX;
-            var y1 = obj.posY;
+            var len = inst.width * inst.scaleX;
+            var wid = inst.height * inst.scaleY;
+            var dir = inst.angle;
+            var x1 = inst.posX;
+            var y1 = inst.posY;
             var x2 = x1 + lengthdir_x(len, dir);
             var y2 = y1 + lengthdir_y(len, dir);
-            draw_set_colour(obj.invalidWorldTransform ? c_red : c_yellow);
+            draw_set_colour(inst.invalidWorldTransform ? c_red : c_yellow);
             draw_arrow(x1, y1, x2, y2, wid);
             break;
         }
     }
     for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
-        var obj = slots[i];
-        switch (obj.type) {
+        var slot = slots[i];
+        switch (slot.type) {
         case "sprite":
             var alpha = 1;
             draw_primitive_begin(pr_linestrip);
-            draw_vertex_color(obj.aX, obj.aY, c_green, alpha);
-            draw_vertex_color(obj.bX, obj.bY, c_blue, alpha);
-            draw_vertex_color(obj.cX, obj.cY, c_lime, alpha);
-            draw_vertex_color(obj.dX, obj.dY, c_aqua, alpha);
-            draw_vertex_color(obj.aX, obj.aY, c_green, alpha);
+            draw_vertex_color(slot.aX, slot.aY, c_green, alpha);
+            draw_vertex_color(slot.bX, slot.bY, c_blue, alpha);
+            draw_vertex_color(slot.cX, slot.cY, c_lime, alpha);
+            draw_vertex_color(slot.dX, slot.dY, c_aqua, alpha);
+            draw_vertex_color(slot.aX, slot.aY, c_green, alpha);
             draw_primitive_end();
             break;
         case "point":
             var r = 10;
-            var x1 = obj.posX;
-            var y1 = obj.posY;
-            var dir = obj.angle;
+            var x1 = slot.posX;
+            var y1 = slot.posY;
+            var dir = slot.angle;
             var x2 = x1 + lengthdir_x(r, dir);
             var y2 = y1 + lengthdir_y(r, dir);
             draw_circle_colour(x1, y1, r, c_orange, c_orange, true);
