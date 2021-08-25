@@ -123,11 +123,11 @@ function __disarm_import_entity_object(_struct) {
     switch (type) {
     case "bone": f = __disarm_import_entity_object_bone; break;
     }
-    var inst = f == undefined ? { } : f(_struct);
-    inst.name = __disarm_struct_get_string_or_default(_struct, "name");
-    inst.type = type;
-    inst.active = true;
-    return inst;
+    var slot = f == undefined ? { } : f(_struct);
+    slot.name = __disarm_struct_get_string_or_default(_struct, "name");
+    slot.type = type;
+    slot.active = true;
+    return slot;
 }
 
 /// @desc Creates a new Disarm entity object definition.
@@ -210,7 +210,7 @@ function __disarm_import_entity_animation_timeline(_struct) {
     }
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
-        inst : __disarm_struct_get_numeric_or_default(_struct, "obj", -1),
+        slot : __disarm_struct_get_numeric_or_default(_struct, "obj", -1),
         type : type,
         keys : __disarm_array_map(__disarm_struct_get_array(_struct, "key"), f),
     }
@@ -370,17 +370,17 @@ function disarm_animation_begin(_arm) {
     entity.slotTable = { };
     var info = entity.info;
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
-        var inst = info[i];
-        inst.active = false;
-        switch (inst.type) {
+        var slot = info[i];
+        slot.active = false;
+        switch (slot.type) {
         case "bone":
-            inst.invalidWorldTransform = true;
-            inst.angle = 0;
-            inst.scaleX = 1;
-            inst.scaleY = 1;
-            inst.posX = 0;
-            inst.posY = 0;
-            inst.boneParent = -1;
+            slot.invalidWorldTransform = true;
+            slot.angle = 0;
+            slot.scaleX = 1;
+            slot.scaleY = 1;
+            slot.posX = 0;
+            slot.posY = 0;
+            slot.boneParent = -1;
             break;
         }
     }
@@ -440,7 +440,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             alpha = lerp(pos_y, key_next.posY, interp);
         }
         // apply transformations
-        var bone = info[timeline.inst];
+        var bone = info[timeline.slot];
         bone.active = true; // enables the bone visibility
         bone.posX = pos_x;
         bone.posY = pos_y;
@@ -606,7 +606,7 @@ function __disarm_update_world_transform_using_object_array(_objs, _idx) {
 /// @param {struct} child The object to update.
 /// @param {struct} parent The parent to use.
 /// @param {real} [up] The direction of the "up" vector.
-function __disarm_update_world_transform(_obj, _bone_parent) {
+function __disarm_update_world_transform(_child, _bone_parent) {
     if (_bone_parent == undefined) {
         return;
     }
@@ -616,13 +616,13 @@ function __disarm_update_world_transform(_obj, _bone_parent) {
     var par_scale_y = _bone_parent.scaleY;
     var par_dir = _bone_parent.angle;
     var par_alpha = _bone_parent.alpha;
-    _obj.angle += par_dir;
-    _obj.scaleX *= par_scale_x;
-    _obj.scaleY *= par_scale_y;
-    _obj.alpha *= par_alpha;
-    var fk = __disarm_apply_forward_kinematics(_obj.posX * par_scale_x, _obj.posY * par_scale_y, par_dir);
-    _obj.posX = par_x + fk[0];
-    _obj.posY = par_y + fk[1];
+    _child.angle += par_dir;
+    _child.scaleX *= par_scale_x;
+    _child.scaleY *= par_scale_y;
+    _child.alpha *= par_alpha;
+    var fk = __disarm_apply_forward_kinematics(_child.posX * par_scale_x, _child.posY * par_scale_y, par_dir);
+    _child.posX = par_x + fk[0];
+    _child.posY = par_y + fk[1];
 }
 
 /// @desc Applies forward kinematics and returns a new point.
@@ -652,20 +652,20 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
         _matrix = default_matrix;
     }
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
-        var inst = info[i];
-        if not (inst.active) {
+        var slot = info[i];
+        if not (slot.active) {
             continue;
         }
-        switch (inst.type) {
+        switch (slot.type) {
         case "bone":
-            var len = inst.width * inst.scaleX;
-            var wid = inst.height * inst.scaleY;
-            var dir = inst.angle;
-            var x1 = inst.posX;
-            var y1 = inst.posY;
+            var len = slot.width * slot.scaleX;
+            var wid = slot.height * slot.scaleY;
+            var dir = slot.angle;
+            var x1 = slot.posX;
+            var y1 = slot.posY;
             var x2 = x1 + lengthdir_x(len, dir);
             var y2 = y1 + lengthdir_y(len, dir);
-            draw_set_colour(inst.invalidWorldTransform ? c_red : c_yellow);
+            draw_set_colour(slot.invalidWorldTransform ? c_red : c_yellow);
             draw_arrow(x1, y1, x2, y2, wid);
             break;
         }
