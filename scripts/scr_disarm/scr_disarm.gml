@@ -20,6 +20,8 @@ function disarm_import(_path) {
 
 /// @desc Attempts to parse this JSON string into a Disarm instance.
 /// @param {string} scon The Spriter JSON file as a string.
+/// @param {string} [atlas] The function to call to decode atlas files.
+/// @param {string} [image] The function to call to decode image files.
 function disarm_import_from_string(_scon) {
     return disarm_import_from_struct(json_parse(_scon));
 }
