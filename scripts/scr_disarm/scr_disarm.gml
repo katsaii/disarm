@@ -20,31 +20,25 @@ function disarm_import(_path) {
 
 /// @desc Attempts to parse this JSON string into a Disarm instance.
 /// @param {string} scon The Spriter JSON file as a string.
-/// @param {string} [atlas] The function to call to decode atlas files.
-/// @param {string} [image] The function to call to decode image files.
+/// @param {struct} [template] The functions to call when loading atlas files and images.
 function disarm_import_from_string(_scon) {
-    return disarm_import_from_struct(json_parse(_scon));
-}
-
-/// @desc Uses this GML struct to construct a Disarm instance.
-/// @param {struct} struct A struct containing the Spriter project information.
-function disarm_import_from_struct(_struct) {
-    if not (is_struct(_struct)) {
+    var struct = json_parse(_scon);
+    if not (is_struct(struct)) {
         return undefined;
     }
-    if ("BrashMonkey Spriter" != __disarm_struct_get_string_or_default(_struct, "generator")) {
+    if ("BrashMonkey Spriter" != __disarm_struct_get_string_or_default(struct, "generator")) {
         return undefined;
     }
     var arm = {
-        version : __disarm_struct_get_string_or_default(_struct, "scon_version", undefined),
+        version : __disarm_struct_get_string_or_default(struct, "scon_version", undefined),
         atlases : __disarm_array_map(
-                __disarm_struct_get_array(_struct, "atlas"),
+                __disarm_struct_get_array(struct, "atlas"),
                 __disarm_import_atlas),
         folders : __disarm_array_map(
-                __disarm_struct_get_array(_struct, "folder"),
+                __disarm_struct_get_array(struct, "folder"),
                 __disarm_import_folder),
         entities : __disarm_array_map(
-                __disarm_struct_get_array(_struct, "entity"),
+                __disarm_struct_get_array(struct, "entity"),
                 __disarm_import_entity),
         currentEntity : 0,
         entityTable : { }
