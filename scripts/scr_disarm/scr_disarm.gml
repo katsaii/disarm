@@ -3,30 +3,32 @@
  * Kat @katsaii
  */
 
+/// @desc Reads the contents of a file and returns its contents.
+/// @param {string} filepath The path of the file to load.
+function __disarm_read_whole_text_file_from_path(_path) {
+    var src = "";
+    if (file_exists(_path)) {
+        var file = file_text_open_read(_path);
+        while not (file_text_eof(file)) {
+            src += file_text_readln(file);
+        }
+        file_text_close(file);
+    }
+    return src;
+}
+
 /// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
 /// @param {string} filepath The path of the Spriter project file.
 function disarm_import(_path) {
-    if not (file_exists(_path)) {
-        return undefined;
-    }
-    var file = file_text_open_read(_path);
-    var src = "";
-    while not (file_text_eof(file)) {
-        src += file_text_readln(file);
-    }
-    file_text_close(file);
-    return disarm_import_from_string(src);
+    return disarm_import_from_string(__disarm_read_whole_text_file_from_path(_path));
 }
 
 /// @desc Attempts to parse this JSON string into a Disarm instance.
 /// @param {string} scon The Spriter JSON file as a string.
 /// @param {struct} [template] The functions to call when loading atlas files and images.
-function disarm_import_from_string(_scon) {
+function disarm_import_from_string(_scon, _template=undefined) {
     var struct = json_parse(_scon);
-    if not (is_struct(struct)) {
-        return undefined;
-    }
-    if ("BrashMonkey Spriter" != __disarm_struct_get_string_or_default(struct, "generator")) {
+    if (!is_struct(struct) || "BrashMonkey Spriter" != __disarm_struct_get_string_or_default(struct, "generator")) {
         return undefined;
     }
     var arm = {
