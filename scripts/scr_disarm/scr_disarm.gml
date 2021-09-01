@@ -23,14 +23,21 @@ function __disarm_get_static_sprite_manager() {
     return sprites;
 }
 
+/// @desc Packages the sprite information into a single structure.
+/// @param {real} sprite The id of the sprite to package.
+function __disarm_make_sprite_information(_sprite) {
+    var idx_spr = sprite_exists(_sprite) ? _sprite : -1;
+    return {
+        idx : idx_spr,
+        tex : idx_spr == -1 ? -1 : sprite_get_texture(idx_spr, 0),
+    };
+}
+
 /// @desc Registers a sprite to be managed.
 /// @param {real} sprite The id of the sprite to register.
-function __disarm_register_managed_sprite(_sprite) {
+function __disarm_make_sprite_information_managed(_sprite) {
     var sprites = __disarm_get_static_sprite_manager();
-    var sprite_data = {
-        idx : _sprite,
-        tex : sprite_get_texture(_sprite, 0),
-    };
+    var sprite_data = __disarm_make_sprite_information(_sprite);
     var sprite_ref = weak_ref_create(sprite_data);
     sprite_ref.idx = _sprite;
     ds_list_add(sprites, sprite_ref);
@@ -74,28 +81,45 @@ function disarm_ev_from_file(_path) {
         armature : method({
             path : _path
         }, function() {
-            return json_parse(__disarm_read_whole_text_file_from_path(path));
+            return path;
         }),
-        atlas : method({
-            get_path : get_path,
-        }, function(_name) {
-            return json_parse(__disarm_read_whole_text_file_from_path(get_path(_name)));
-        }),
-        image : method({
-            get_path : get_path,
-        }, function(_name) {
-            return __disarm_register_managed_sprite(sprite_add(get_path(_name), 1, true, false, 0, 0));
-        }),
+        atlas : get_path,
+        image : get_path,
     };
 }
 
 /// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
 /// @param {struct} events A struct containing the fields `armature`, `atlas` and `image`, representing events the disarm importer will call.
 function disarm_import(_events) {
+    static aux_text = function(_x) {
+        if (is_string(_x)) {
+            return json_parse(file_exists(_x) ? __disarm_read_whole_text_file_from_path(_x) : _x);
+        } else if (is_struct(_x)) {
+            return _x;
+        } else {
+            return { };
+        }
+    };
+    static aux_image = function(_x) {
+        if (is_string(_x)) {
+            if (asset_get_type(_x) == asset_sprite) {
+                return __disarm_make_sprite_information(_x);
+            } else if (file_exists(_x)) {
+                var new_spr = sprite_add(_x, 1, true, false, 0, 0);
+                return __disarm_make_sprite_information_managed(new_spr);
+            }
+        } else if (is_numeric(_x) && sprite_exists(_x)) {
+            return __disarm_make_sprite_information(_x);
+        }
+        return __disarm_make_sprite_information(-1);
+    };
     var get_nothing = function() { return { }; };
-    var get_armature = __disarm_struct_get_method_or_default(_events, "armature", get_nothing);
-    var get_atlas = __disarm_struct_get_method_or_default(_events, "atlas", get_nothing);
-    var get_image = __disarm_struct_get_method_or_default(_events, "image", get_nothing);
+    var get_armature = __disarm_compose_methods(aux_text,
+            __disarm_struct_get_method_or_default(_events, "armature", get_nothing));
+    var get_atlas = __disarm_compose_methods(aux_text,
+            __disarm_struct_get_method_or_default(_events, "atlas", get_nothing));
+    var get_image = __disarm_compose_methods(aux_image,
+            __disarm_struct_get_method_or_default(_events, "image", get_nothing));
     var struct = get_armature();
     if (!is_struct(struct) || "BrashMonkey Spriter" != __disarm_struct_get_string_or_default(struct, "generator")) {
         return undefined;
@@ -945,4 +969,16 @@ function __disarm_animation_lerp_angle(_a, _b, _spin, _amount) {
         }
     }
     return lerp(_a, _b, _amount);
+}
+
+/// @desc Composes two functions together.
+/// @param {real} f The outer function.
+/// @param {real} g The inner function.
+function __disarm_compose_methods(_f, _g) {
+    return method({
+        f : _f,
+        g : _g,
+    }, function(_x) {
+        return f(g(_x));
+    });
 }
