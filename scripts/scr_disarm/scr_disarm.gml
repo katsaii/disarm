@@ -65,11 +65,26 @@ function disarm_ev_from_file(_path) {
             return
         })
     });*/
+    var get_path = method({
+        dirname : filename_dir(_path),
+    }, function(_name) {
+        return dirname + "/" + _name;
+    });
     return {
         armature : method({
             path : _path
         }, function() {
             return json_parse(__disarm_read_whole_text_file_from_path(path));
+        }),
+        atlas : method({
+            get_path : get_path,
+        }, function(_name) {
+            return json_parse(__disarm_read_whole_text_file_from_path(get_path(_name)));
+        }),
+        image : method({
+            get_path : get_path,
+        }, function(_name) {
+            return __disarm_register_managed_sprite(sprite_add(get_path(_name), 1, true, false, 0, 0));
         }),
     };
 }
