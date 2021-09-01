@@ -140,14 +140,17 @@ function disarm_import(_events) {
     var get_image = __disarm_compose_methods(aux_image,
             __disarm_struct_get_method_or_default(_events, "image", aux_nothing));
     var struct = get_armature();
-    if (!is_struct(struct) || "BrashMonkey Spriter" != __disarm_struct_get_string_or_default(struct, "generator")) {
-        return undefined;
-    }
+    __disarm_struct_assert_eq(struct, "generator", "BrashMonkey Spriter",
+            "Disarm currently only supports animations exported by Spriter");
+    __disarm_struct_assert_eq(struct, "scon_version", "1.0",
+            "Disarm currently only supports version 1.0 of the Spriter format");
     var arm = {
-        version : __disarm_struct_get_string_or_default(struct, "scon_version", undefined),
         atlases : __disarm_array_map(
                 __disarm_struct_get_array(struct, "atlas"),
-                __disarm_import_atlas),
+                method({
+                    get_atlas : get_atlas,
+                    get_image : get_image,
+                }, __disarm_import_atlas)),
         folders : __disarm_array_map(
                 __disarm_struct_get_array(struct, "folder"),
                 __disarm_import_folder),
@@ -162,18 +165,25 @@ function disarm_import(_events) {
     for (var i = array_length(entities) - 1; i >= 0; i -= 1) {
         entity_table[$ entities[i].name] = i;
     }
-    if (arm.version != "1.0") {
-        show_debug_message(
-                "Warning: Disarm currently only supports version 1.0 of the Spriter format, " +
-                "the animation was loaded but may be unstable");
-    }
     return arm;
 }
 
 /// @desc Creates a new Disarm atlas instance.
 /// @param {struct} struct A struct containing the Spriter project information.
 function __disarm_import_atlas(_struct) {
-    return __disarm_struct_get_string_or_default(_struct, "name");
+    var name = __disarm_struct_get_string_or_default(_struct, "name");
+    var atlas = get_atlas(name);
+    var meta = __disarm_struct_get_struct(atlas, "meta");
+    __disarm_struct_assert_eq(meta, "app", "Spriter", "unrecognised texture atlas format");
+    __disarm_struct_assert_eq(meta, "format", "RGBA8888", "unsupported texture atlas colour format");
+    __disarm_struct_assert_eq(meta, "version", "r11", "unsupported texture atlas version");
+    var size = __disarm_struct_get_struct(meta, "size");
+    return {
+        image : get_image(__disarm_struct_get_string_or_default(meta, "image")),
+        scale : __disarm_struct_get_numeric_or_default(meta, "scale", 1),
+        width : __disarm_struct_get_numeric_or_default(size, "w", 1),
+        height : __disarm_struct_get_numeric_or_default(size, "h", 1),
+    };
 }
 
 /// @desc Creates a new Disarm folder instance.
@@ -856,6 +866,27 @@ function __disarm_struct_get_string_or_default(_struct, _key, _default="") {
         return is_string(value) ? value : string(value);
     }
     return _default;
+}
+
+/// @desc Attempts to get a string value from a struct, and returns a default value
+///       if it doesn't exist.
+/// @param {struct} struct The struct to check.
+/// @param {string} key The key to check.
+/// @param {array} expected The expected value.
+/// @param {string} on_error The message to warn if the value isn't expected.
+function __disarm_struct_assert_eq(_struct, _key, _expected, _on_error) {
+    if not (is_array(_expected)) {
+        _expected = [_expected];
+    }
+    var current = __disarm_struct_get_string_or_default(_struct, _key);
+    for (var i = array_length(_expected) - 1; i >= 0; i -= 1) {
+        var expected = _expected[i];
+        if (current == expected) {
+            return true;
+        }
+    }
+    show_debug_message("DISARM WARNING: " + _on_error + ", got `" + string(current) + "` (the animation will be loaded but may be unstable)");
+    return false;
 }
 
 /// @desc Attempts to get a numeric value from a struct, and returns a default value
