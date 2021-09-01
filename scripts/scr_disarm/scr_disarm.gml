@@ -56,22 +56,34 @@ function disarm_collect() {
     }
 }
 
+/// @desc Creates a set of events for loading Spriter armatures from strings and sprites.
+/// @param {struct} arm The struct containing armature data.
+/// @param {struct} [atlas_map] A map from atlas names to atlas data.
+/// @param {struct} [image_map] A map from image names to image data.
+function disarm_env_internal(_arm, _atlas_map={ }, _image_map={ }) {
+    return {
+        armature : method({
+            arm : _arm
+        }, function() {
+            return arm;
+        }),
+        atlas : method({
+            map : _atlas_map
+        }, function(_name) {
+            return __disarm_struct_get_struct(map, _name);
+        }),
+        image : method({
+            map : _image_map
+        }, function(_name) {
+            var idx_spr = __disarm_struct_get_numeric_or_default(map, _name, -1);
+            return sprite_exists(idx_spr) ? idx_spr : -1;
+        }),
+    };
+}
+
 /// @desc Creates a set of events for loading Spriter armatures from the physical file system.
 /// @param {string} path The file path of the skeleton file.
-function disarm_ev_from_file(_path) {
-    /*var atlas_get_path = method({
-        dirname : filename_dir(_path),
-    }, function(_name) {
-        return dirname + "/" + _name;
-    });
-    show_message(atlas_get_path("testing.txt"));
-    return disarm_import_from_string(__disarm_read_whole_text_file_from_path(_path), {
-        atlas : method({
-            atlas_get_path : atlas_get_path,
-        }, function(_name) {
-            return
-        })
-    });*/
+function disarm_env_file(_path) {
     var get_path = method({
         dirname : filename_dir(_path),
     }, function(_name) {
@@ -113,13 +125,13 @@ function disarm_import(_events) {
         }
         return __disarm_make_sprite_information(-1);
     };
-    var get_nothing = function() { return { }; };
+    static aux_nothing = function() { return { }; };
     var get_armature = __disarm_compose_methods(aux_text,
-            __disarm_struct_get_method_or_default(_events, "armature", get_nothing));
+            __disarm_struct_get_method_or_default(_events, "armature", aux_nothing));
     var get_atlas = __disarm_compose_methods(aux_text,
-            __disarm_struct_get_method_or_default(_events, "atlas", get_nothing));
+            __disarm_struct_get_method_or_default(_events, "atlas", aux_nothing));
     var get_image = __disarm_compose_methods(aux_image,
-            __disarm_struct_get_method_or_default(_events, "image", get_nothing));
+            __disarm_struct_get_method_or_default(_events, "image", aux_nothing));
     var struct = get_armature();
     if (!is_struct(struct) || "BrashMonkey Spriter" != __disarm_struct_get_string_or_default(struct, "generator")) {
         return undefined;
