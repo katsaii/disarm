@@ -177,12 +177,57 @@ function __disarm_import_atlas(_struct) {
     __disarm_struct_assert_eq(meta, "app", "Spriter", "unrecognised texture atlas format");
     __disarm_struct_assert_eq(meta, "format", "RGBA8888", "unsupported texture atlas colour format");
     __disarm_struct_assert_eq(meta, "version", "r11", "unsupported texture atlas version");
+    var scale = __disarm_struct_get_numeric_or_default(meta, "scale", 1);
     var size = __disarm_struct_get_struct(meta, "size");
+    var width = __disarm_struct_get_numeric_or_default(size, "w", 1);
+    var height = __disarm_struct_get_numeric_or_default(size, "h", 1);
+    var frames = __disarm_struct_get_struct(atlas, "frames");
+    var frame_names = variable_struct_get_names(frames);
+    var frame_table = { };
+    for (var i = array_length(frame_names) - 1; i >= 0; i -= 1) {
+        var frame_name = frame_names[i];
+        var frame_data = frames[$ frame_name];
+        var rotate = __disarm_struct_get_numeric_or_default(frame_data, "rotated");
+        var frame_size = __disarm_struct_get_struct(frame_data, "frame");
+        var tex_x = __disarm_struct_get_numeric_or_default(frame_size, "x");
+        var tex_y = __disarm_struct_get_numeric_or_default(frame_size, "y");
+        var tex_width = __disarm_struct_get_numeric_or_default(frame_size, "w");
+        var tex_height = __disarm_struct_get_numeric_or_default(frame_size, "h");
+        var tex_dx = rotate ? tex_height : tex_width;
+        var tex_dy = rotate ? tex_width : tex_height;
+        var uv_left = tex_x / width;
+        var uv_top = tex_y / height;
+        var uv_right = (tex_x + tex_dx) / width;
+        var uv_bottom = (tex_y + tex_dy) / height;
+        var a_u, a_v, b_u, b_v, c_u, c_v, d_u, d_v;
+        if (rotate) {
+            a_u = uv_right;
+            a_v = uv_top;
+            b_u = uv_right;
+            b_v = uv_bottom;
+            c_u = uv_left;
+            c_v = uv_top;
+            d_u = uv_left;
+            d_v = uv_bottom;
+        } else {
+            a_u = uv_left;
+            a_v = uv_top;
+            b_u = uv_right;
+            b_v = uv_top;
+            c_u = uv_left;
+            c_v = uv_bottom;
+            d_u = uv_right;
+            d_v = uv_bottom;
+        }
+        frame_table[$ frame_name] = {
+            aU : a_u, bU : b_u, cU : c_u, dU : d_u,
+            aV : a_v, bV : b_v, cV : c_v, dV : d_v,
+        };
+    }
     return {
+        name : name,
         image : get_image(__disarm_struct_get_string_or_default(meta, "image")),
-        scale : __disarm_struct_get_numeric_or_default(meta, "scale", 1),
-        width : __disarm_struct_get_numeric_or_default(size, "w", 1),
-        height : __disarm_struct_get_numeric_or_default(size, "h", 1),
+        frameTable : frame_table,
     };
 }
 
