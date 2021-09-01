@@ -45,7 +45,7 @@ function __disarm_make_sprite_information_managed(_sprite) {
 }
 
 /// @desc Collects any dynamically allocated sprites that are no longer referenced.
-function disarm_collect() {
+function disarm_flush() {
     var sprites = __disarm_get_static_sprite_manager();
     for (var i = ds_list_size(sprites) - 1; i >= 0; i -= 1) {
         var sprite_ref = sprites[| i];
@@ -63,17 +63,17 @@ function disarm_collect() {
 function disarm_env_internal(_arm, _atlas_map={ }, _image_map={ }) {
     return {
         armature : method({
-            arm : _arm
+            arm : _arm,
         }, function() {
             return arm;
         }),
         atlas : method({
-            map : _atlas_map
+            map : _atlas_map,
         }, function(_name) {
             return __disarm_struct_get_struct(map, _name);
         }),
         image : method({
-            map : _image_map
+            map : _image_map,
         }, function(_name) {
             var idx_spr = __disarm_struct_get_numeric_or_default(map, _name, -1);
             return sprite_exists(idx_spr) ? idx_spr : -1;
@@ -83,7 +83,8 @@ function disarm_env_internal(_arm, _atlas_map={ }, _image_map={ }) {
 
 /// @desc Creates a set of events for loading Spriter armatures from the physical file system.
 /// @param {string} path The file path of the skeleton file.
-function disarm_env_file(_path) {
+/// @param {struct} [image_map] A map from image names to image data.
+function disarm_env_file(_path, _image_map={ }) {
     var get_path = method({
         dirname : filename_dir(_path),
     }, function(_name) {
@@ -91,12 +92,18 @@ function disarm_env_file(_path) {
     });
     return {
         armature : method({
-            path : _path
+            path : _path,
         }, function() {
             return path;
         }),
         atlas : get_path,
-        image : get_path,
+        image : method({
+            map : _image_map,
+            get_path : get_path,
+        }, function(_name) {
+            var idx_spr = __disarm_struct_get_numeric_or_default(map, _name, -1);
+            return sprite_exists(idx_spr) ? idx_spr : get_path(_name);
+        }),
     };
 }
 
