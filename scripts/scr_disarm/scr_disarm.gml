@@ -17,10 +17,54 @@ function __disarm_read_whole_text_file_from_path(_path) {
     return src;
 }
 
+/// @desc Returns the global list of managed sprites.
+function __disarm_get_static_sprite_manager() {
+    static sprites = ds_list_create();
+    return sprites;
+}
+
+/// @desc Registers a sprite to be managed.
+/// @param {real} sprite The id of the sprite to register.
+function __disarm_register_managed_sprite(_sprite) {
+    var sprites = __disarm_get_static_sprite_manager();
+    var sprite_data = {
+        idx : _sprite,
+        tex : sprite_get_texture(_sprite, 0),
+    };
+    var sprite_ref = weak_ref_create(sprite_data);
+    sprite_ref.idx = _sprite;
+    ds_list_add(sprites, sprite_ref);
+    return sprite_data;
+}
+
+/// @desc Collects any dynamically allocated sprites that are no longer referenced.
+function disarm_collect() {
+    var sprites = __disarm_get_static_sprite_manager();
+    for (var i = ds_list_size(sprites) - 1; i >= 0; i -= 1) {
+        var sprite_ref = sprites[| i];
+        if not (weak_ref_alive(sprite_ref)) {
+            ds_list_delete(sprites, i);
+            sprite_delete(sprite_ref.idx);
+        }
+    }
+}
+
 /// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
 /// @param {string} filepath The path of the Spriter project file.
 function disarm_import(_path) {
-    return disarm_import_from_string(__disarm_read_whole_text_file_from_path(_path));
+    var atlas_get_path = method({
+        dirname : filename_dir(_path),
+    }, function(_name) {
+        return dirname + "/" + _name;
+    });
+    show_message(atlas_get_path("testing.txt"));
+    return disarm_import_from_string(__disarm_read_whole_text_file_from_path(_path), {
+        atlas : method({
+            atlas_get_path : atlas_get_path,
+        }, function(_name) {
+            return
+        })
+    });
 }
 
 /// @desc Attempts to parse this JSON string into a Disarm instance.
