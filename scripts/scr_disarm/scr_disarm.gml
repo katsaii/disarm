@@ -49,10 +49,10 @@ function disarm_collect() {
     }
 }
 
-/// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
-/// @param {string} filepath The path of the Spriter project file.
-function disarm_import(_path) {
-    var atlas_get_path = method({
+/// @desc Creates a set of events for loading Spriter armatures from the physical file system.
+/// @param {string} path The file path of the skeleton file.
+function disarm_ev_from_file(_path) {
+    /*var atlas_get_path = method({
         dirname : filename_dir(_path),
     }, function(_name) {
         return dirname + "/" + _name;
@@ -64,14 +64,24 @@ function disarm_import(_path) {
         }, function(_name) {
             return
         })
-    });
+    });*/
+    return {
+        armature : method({
+            path : _path
+        }, function() {
+            return json_parse(__disarm_read_whole_text_file_from_path(path));
+        }),
+    };
 }
 
-/// @desc Attempts to parse this JSON string into a Disarm instance.
-/// @param {string} scon The Spriter JSON file as a string.
-/// @param {struct} [template] The functions to call when loading atlas files and images.
-function disarm_import_from_string(_scon, _template=undefined) {
-    var struct = json_parse(_scon);
+/// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
+/// @param {struct} events A struct containing the fields `armature`, `atlas` and `image`, representing events the disarm importer will call.
+function disarm_import(_events) {
+    var get_nothing = function() { return { }; };
+    var get_armature = __disarm_struct_get_method_or_default(_events, "armature", get_nothing);
+    var get_atlas = __disarm_struct_get_method_or_default(_events, "atlas", get_nothing);
+    var get_image = __disarm_struct_get_method_or_default(_events, "image", get_nothing);
+    var struct = get_armature();
     if (!is_struct(struct) || "BrashMonkey Spriter" != __disarm_struct_get_string_or_default(struct, "generator")) {
         return undefined;
     }
@@ -97,7 +107,7 @@ function disarm_import_from_string(_scon, _template=undefined) {
     if (arm.version != "1.0") {
         show_debug_message(
                 "Warning: Disarm currently only supports version 1.0 of the Spriter format, " +
-                "the animation was loaded correctly but may be unstable");
+                "the animation was loaded but may be unstable");
     }
     return arm;
 }
@@ -653,19 +663,23 @@ function __disarm_wierd_hack_for_array_clone(_in) {
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
 /// @param {array} info The object array.
 /// @param {real} id The object index.
-function __disarm_update_world_transform_using_object_array(_objs, _idx) {
-    var bone = _objs[_idx];
-    if (bone.invalidWorldTransform && bone.active) {
-        bone.invalidWorldTransform = false;
-        switch (bone.type) {
-        case "bone":
-            var idx_parent = bone.boneParent;
-            var bone_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(_objs, idx_parent);
-            __disarm_update_world_transform(bone, bone_parent);
-            break;
+function __disarm_update_world_transform_using_object_array(_info, _idx) {
+    var slot = _info[_idx];
+    switch (slot.type) {
+    case "bone":
+        if (slot.invalidWorldTransform && slot.active) {
+            slot.invalidWorldTransform = false;
+            switch (slot.type) {
+            case "bone":
+                var idx_parent = slot.boneParent;
+                var bone_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(_info, idx_parent);
+                __disarm_update_world_transform(slot, bone_parent);
+                break;
+            }
         }
+        break;
     }
-    return bone;
+    return slot;
 }
 
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
@@ -801,6 +815,23 @@ function __disarm_struct_get_numeric_or_default(_struct, _key, _default=0) {
                 var n = real(value);
                 return n;
             } catch (_) { }
+        }
+    }
+    return _default;
+}
+
+/// @desc Attempts to get a method value from a struct.
+/// @param {struct} struct The struct to check.
+/// @param {string} key The key to check.
+/// @param {value} [default] The default value.
+/// @param {real} [ignore_self] Whether to unbind methods bound to `struct`.
+function __disarm_struct_get_method_or_default(_struct, _key, _default=undefined, _ignore_self=true) {
+    if (variable_struct_exists(_struct, _key)) {
+        var value = _struct[$ _key];
+        if (is_method(value)) {
+            return _ignore_self && method_get_self(value) == _struct ? method_get_index(value) : value;
+        } else if (is_numeric(value) && script_exists(value)) {
+            return value;
         }
     }
     return _default;
