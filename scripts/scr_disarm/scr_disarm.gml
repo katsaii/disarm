@@ -25,12 +25,40 @@ function __disarm_get_static_sprite_manager() {
 
 /// @desc Packages the sprite information into a single structure.
 /// @param {real} sprite The id of the sprite to package.
-function __disarm_make_sprite_information(_sprite) {
+/// @param {real} [subimg] The id of the subimage to use.
+function __disarm_make_sprite_information(_sprite, _subimg=0) {
     var idx_spr = sprite_exists(_sprite) ? _sprite : -1;
-    return {
+    var sprite_data = {
         idx : idx_spr,
-        tex : idx_spr == -1 ? -1 : sprite_get_texture(idx_spr, 0),
+        page : -1,
+        uvLeft : 0,
+        uvTop : 0,
+        uvRight : 1,
+        uvBottom : 1,
     };
+    if (idx_spr != -1) {
+        var width = sprite_get_width(_sprite);
+        var height = sprite_get_height(_sprite);
+        var uvs = sprite_get_uvs(_sprite, _subimg);
+        var uv_left = uvs[0];
+        var uv_top = uvs[1];
+        var uv_right = uvs[2];
+        var uv_bottom = uvs[3];
+        var uv_x_offset = uvs[4]; // number of pixels trimmed from the left
+        var uv_y_offset = uvs[5]; // number of pixels trimmed from the top
+        var uv_x_ratio = uvs[6]; // ratio of discarded pixels horizontally
+        var uv_y_ratio = uvs[7]; // ratio of discarded pixels vertically
+        var uv_width = (uv_right - uv_left) / uv_x_ratio;
+        var uv_height = (uv_bottom - uv_top) / uv_y_ratio;
+        var uv_kw = uv_width / width;
+        var uv_kh = uv_height / height;
+        sprite_data.page = sprite_get_texture(_sprite, _subimg);
+        sprite_data.uvLeft = uv_left - uv_x_offset * uv_kw;
+        sprite_data.uvTop = uv_top - uv_y_offset * uv_kh;
+        sprite_data.uvRight = sprite_data.uvLeft + uv_width;
+        sprite_data.uvBottom = sprite_data.uvTop + uv_height;
+    }
+    return sprite_data;
 }
 
 /// @desc Registers a sprite to be managed.
