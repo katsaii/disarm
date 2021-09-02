@@ -275,10 +275,10 @@ function __disarm_import_folder(_struct) {
                 function(_struct) {
                     return {
                         name : __disarm_struct_get_string_or_default(_struct, "name"),
-                        width : __disarm_struct_get_numeric_or_default(_struct, "width", 1, is_numeric),
-                        height : __disarm_struct_get_numeric_or_default(_struct, "height", 1, is_numeric),
-                        aWidth : __disarm_struct_get_numeric_or_default(_struct, "aw", 1, is_numeric),
-                        aHeight : __disarm_struct_get_numeric_or_default(_struct, "ah", 1, is_numeric),
+                        width : __disarm_struct_get_numeric_or_default(_struct, "width", 1),
+                        height : __disarm_struct_get_numeric_or_default(_struct, "height", 1),
+                        aWidth : __disarm_struct_get_numeric_or_default(_struct, "aw", 1),
+                        aHeight : __disarm_struct_get_numeric_or_default(_struct, "ah", 1),
                         aX : __disarm_struct_get_numeric_or_default(_struct, "ax"),
                         aY : __disarm_struct_get_numeric_or_default(_struct, "ay"),
                         aXOff : __disarm_struct_get_numeric_or_default(_struct, "axoff"),
@@ -309,6 +309,7 @@ function __disarm_import_entity(_struct) {
                 __disarm_struct_get_array(_struct, "character_map"),
                 __disarm_import_entity_character_map),
         skinTable : { },
+        activeSkin : { },
     };
     var anims = entity.anims;
     var anim_table = entity.animTable;
@@ -764,6 +765,7 @@ function disarm_animation_end(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slots;
+    var skin = entity.activeSkin;
     var folders = _arm.folders;
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(info, i);
@@ -776,6 +778,14 @@ function disarm_animation_end(_arm) {
         case "sprite":
             var idx_folder = slot.folder;
             var idx_file = slot.file;
+            var folder_map = skin[$ string(idx_folder)];
+            if (folder_map != undefined) {
+                var file_map = skin[$ string(idx_file)];
+                if (file_map != undefined) {
+                    idx_folder = file_map[0];
+                    idx_file = file_map[1];
+                }
+            }
             if (idx_folder == -1 || idx_file == -1) {
                 continue;
             }
