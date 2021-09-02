@@ -155,7 +155,7 @@ function disarm_import(_events) {
             if (asset_get_type(_x) == asset_sprite) {
                 return __disarm_make_sprite_information(_x);
             } else if (file_exists(_x)) {
-                var new_spr = sprite_add(_x, 1, true, false, 0, 0);
+                var new_spr = sprite_add(_x, 1, false, false, 0, 0);
                 return __disarm_make_sprite_information_managed(new_spr);
             }
         } else if (is_numeric(_x) && sprite_exists(_x)) {
@@ -535,6 +535,8 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
                 alpha : 1,
                 aX : 0, bX : 0, cX : 0, dX : 0,
                 aY : 0, bY : 0, cY : 0, dY : 0,
+                idxAtlas : -1,
+                frameName : "",
             };
             break;
         case "point":
@@ -775,6 +777,8 @@ function disarm_animation_end(_arm) {
             slot.cY = slot_y + right * i_y + bottom * j_y;
             slot.dX = slot_x + left * i_x + bottom * j_x;
             slot.dY = slot_y + left * i_y + bottom * j_y;
+            slot.idxAtlas = folder.atlas;
+            slot.frameName = file.name;
             break;
         case "point":
             __disarm_update_world_transform(slot, bone_parent);
@@ -988,7 +992,8 @@ function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
 function __disarm_get_full_fat_vertex_format() {
     static format = (function() {
         vertex_format_begin();
-        vertex_format_add_position();
+        vertex_format_add_position_3d();
+        vertex_format_add_normal();
         vertex_format_add_colour();
         vertex_format_add_texcoord();
         return vertex_format_end();
@@ -1003,6 +1008,7 @@ function disarm_mesh_create() {
         batches : [],
         batchCount : 0,
         batchCapacity : 0,
+        currentPage : undefined,
     };
 }
 
@@ -1020,8 +1026,9 @@ function disarm_mesh_destroy(_mesh) {
 /// @desc Resets the draw options for this mesh.
 /// @param {struct} mesh The mesh to begin drawing.
 function disarm_mesh_begin(_mesh) {
-    __disarm_mesh_batch_end(_mesh);
+    _mesh.partialBatch = false;
     _mesh.batchCount = 0;
+    _mesh.currentPage = undefined;
 }
 
 /// @desc Finalises the drawing of this mesh.
@@ -1030,11 +1037,103 @@ function disarm_mesh_end(_mesh) {
     __disarm_mesh_batch_end(_mesh);
 }
 
+/// @desc Adds the current world transform of an armature to this mesh.
+function disarm_mesh_add_armature(_mesh, _arm) {
+    var entity = _arm.entities[_arm.currentEntity];
+    var atlases = _arm.atlases;
+    var slots = entity.slotsDrawOrder;
+    var page = _mesh.currentPage;
+    var batches = _mesh.batches;
+    for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
+        var slot = slots[i];
+        switch (slot.type) {
+        case "sprite":
+            var idx_atlas = slot.idxAtlas;
+            var frame_name = slot.frameName,
+            if (idx_atlas == -1) {
+                break;
+            }
+            var atlas = atlases[idx_atlas];
+            var sprite_data = atlas.image;
+            var frame = atlas.frameTable[$ frame_name];
+            var new_page = sprite_data.page;
+            var uv_left = sprite_data.uvLeft;
+            var uv_top = sprite_data.uvTop;
+            var uv_right = sprite_data.uvRight;
+            var uv_bottom = sprite_data.uvBottom;
+            if (page == undefined) {
+                __disarm_mesh_batch_begin(_mesh, new_page);
+                page = new_page;
+            } else if (new_page != page) {
+                __disarm_mesh_batch_end(_mesh);
+                __disarm_mesh_batch_begin(_mesh, new_page);
+                page = new_page;
+            }
+            var vbuff = batches[_mesh.batchCount].vbuff;
+            var colour = c_white;
+            var alpha = 1;
+            var a_x = slot.aX;
+            var a_y = slot.aY;
+            var b_x = slot.bX;
+            var b_y = slot.bY;
+            var c_x = slot.cX;
+            var c_y = slot.cY;
+            var d_x = slot.dX;
+            var d_y = slot.dY;
+            var a_u = lerp(uv_left, uv_right, frame.aU);
+            var a_v = lerp(uv_top, uv_bottom, frame.aV);
+            var b_u = lerp(uv_left, uv_right, frame.bU);
+            var b_v = lerp(uv_top, uv_bottom, frame.bV);
+            var c_u = lerp(uv_left, uv_right, frame.cU);
+            var c_v = lerp(uv_top, uv_bottom, frame.cV);
+            var d_u = lerp(uv_left, uv_right, frame.dU);
+            var d_v = lerp(uv_top, uv_bottom, frame.dV);
+            vertex_position_3d(vbuff, a_x, a_y, i);
+            vertex_normal(vbuff, 0, 0, 1);
+            vertex_colour(vbuff, colour, alpha);
+            vertex_texcoord(vbuff, a_u, a_v);
+            vertex_position_3d(vbuff, b_x, b_y, i);
+            vertex_normal(vbuff, 0, 0, 1);
+            vertex_colour(vbuff, colour, alpha);
+            vertex_texcoord(vbuff, b_u, b_v);
+            vertex_position_3d(vbuff, d_x, d_y, i);
+            vertex_normal(vbuff, 0, 0, 1);
+            vertex_colour(vbuff, colour, alpha);
+            vertex_texcoord(vbuff, d_u, d_v);
+            vertex_position_3d(vbuff, d_x, d_y, i);
+            vertex_normal(vbuff, 0, 0, 1);
+            vertex_colour(vbuff, colour, alpha);
+            vertex_texcoord(vbuff, d_u, d_v);
+            vertex_position_3d(vbuff, b_x, b_y, i);
+            vertex_normal(vbuff, 0, 0, 1);
+            vertex_colour(vbuff, colour, alpha);
+            vertex_texcoord(vbuff, b_u, b_v);
+            vertex_position_3d(vbuff, c_x, c_y, i);
+            vertex_normal(vbuff, 0, 0, 1);
+            vertex_colour(vbuff, colour, alpha);
+            vertex_texcoord(vbuff, c_u, c_v);
+            break;
+        }
+    }
+    _mesh.currentPage = page;
+}
+
+/// @desc Submits this mesh to the draw pipeline.
+/// @param {struct} mesh The mesh to submit.
+function disarm_mesh_submit(_mesh) {
+    var batches = _mesh.batches;
+    var count = _mesh.batchCount;
+    for (var i = 0; i < count; i += 1) {
+        var batch = batches[i];
+        vertex_submit(batch.vbuff, pr_trianglelist, batch.page);
+    }
+}
+
 /// @desc Starts a new mesh batch
 /// @param {struct} mesh The mesh to add a new batch to.
 function __disarm_mesh_batch_end(_mesh) {
     if (_mesh.partialBatch) {
-        vertex_end(_mesh.batches[_mesh.batchCount]);
+        vertex_end(_mesh.batches[_mesh.batchCount].vbuff);
         _mesh.partialBatch = false;
         _mesh.batchCount += 1;
     }
