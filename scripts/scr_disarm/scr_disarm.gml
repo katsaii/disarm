@@ -350,7 +350,6 @@ function __disarm_import_entity_object_bone(_struct) {
 function __disarm_import_entity_animation(_struct) {
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
-        time : 0,
         dt : __disarm_struct_get_numeric_or_default(_struct, "interval", -1),
         duration : __disarm_struct_get_numeric_or_default(_struct, "length", -1),
         looping : __disarm_struct_get_numeric_or_default(_struct, "looping", true),
