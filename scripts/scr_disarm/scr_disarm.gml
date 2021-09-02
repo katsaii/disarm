@@ -984,6 +984,18 @@ function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
     draw_set_alpha(default_alpha);
 }
 
+/// @desc Returns the disarm vertex format.
+function disarm_vertex_format() {
+    static format = (function() {
+        vertex_format_begin();
+        vertex_format_add_position();
+        vertex_format_add_colour();
+        vertex_format_add_texcoord();
+        return vertex_format_end();
+    })();
+    return format;
+}
+
 /// @desc Attempts to get a string value from a struct, and returns a default value
 ///       if it doesn't exist.
 /// @param {struct} struct The struct to check.
