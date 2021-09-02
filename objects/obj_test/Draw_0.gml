@@ -9,5 +9,5 @@ disarm_mesh_end(mesh);
 matrix_set(matrix_world, matrix_build(x, y, 0, 0, 0, image_angle, image_xscale, image_yscale, 1));
 disarm_mesh_submit(mesh);
 matrix_set(matrix_world, matrix_build_identity());
-//disarm_draw_debug(arm, matrix_build(x, y, 0, 0, 0, image_angle, image_xscale, image_yscale, 1));
+disarm_draw_debug(arm, matrix_build(x, y, 0, 0, 0, image_angle, image_xscale, image_yscale, 1));
 //disarm_draw_debug_atlas(arm);

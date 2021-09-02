@@ -345,11 +345,12 @@ function __disarm_import_entity_object_bone(_struct) {
     return {
         width : __disarm_struct_get_numeric_or_default(_struct, "w", 1),
         height : __disarm_struct_get_numeric_or_default(_struct, "h", 1),
+        posX : 0,
+        posY : 0,
         angle : 0,
         scaleX : 1,
         scaleY : 1,
-        posX : 0,
-        posY : 0,
+        alpha : 1,
         boneParent : -1,
         invalidWorldTransform : true,
     };
@@ -627,11 +628,12 @@ function disarm_animation_begin(_arm) {
         switch (slot.type) {
         case "bone":
             slot.invalidWorldTransform = true;
+            slot.posX = 0;
+            slot.posY = 0;
             slot.angle = 0;
             slot.scaleX = 1;
             slot.scaleY = 1;
-            slot.posX = 0;
-            slot.posY = 0;
+            slot.alpha = 1;
             slot.boneParent = -1;
             break;
         }
@@ -641,9 +643,9 @@ function disarm_animation_begin(_arm) {
 /// @desc Adds an animation to the armature pose.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} anim The name of the animation to play.
-/// @param {real} amount The progress, as a number between 0 and 1, of the animation.
-/// @param {real} [blend_mode] The blend mode to use when applying the animation.
-function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
+/// @param {real} progress The progress, as a number between 0 and 1, of the animation.
+/// @param {real} [blend_amount] The intensity of the animation.
+function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slots;
@@ -652,7 +654,7 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
     var mainline = anim.mainline;
     var timelines = anim.timelines;
     var looping = anim.looping;
-    var time_progress = clamp(_amount, 0, 1);
+    var time_progress = clamp(_progress, 0, 1);
     var time_duration = anim.duration;
     var time = lerp(0, time_duration, time_progress);
     var idx_mainframe = __disarm_find_struct_with_time_in_array(mainline, time);
@@ -691,8 +693,17 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
             scale_y = lerp(scale_y, key_next.scaleY, interp);
             alpha = lerp(pos_y, key_next.posY, interp);
         }
-        // apply transformations
         var bone = info[timeline.slot];
+        // blend between current and new animation
+        if (_amount != undefined) {
+            pos_x = lerp(bone.posX, pos_x, _amount);
+            pos_y = lerp(bone.posY, pos_y, _amount);
+            angle = __disarm_animation_lerp_angle(bone.angle, angle, 1, _amount);
+            scale_x = lerp(bone.scaleX, scale_x, _amount);
+            scale_y = lerp(bone.scaleY, scale_y, _amount);
+            alpha = lerp(bone.alpha, alpha, _amount);
+        }
+        // apply transformations
         bone.active = true; // enables the bone visibility
         bone.posX = pos_x;
         bone.posY = pos_y;
@@ -739,6 +750,17 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
                 pivot_y = lerp(pivot_y, key_next.pivotY, interp);
                 alpha = lerp(pos_y, key_next.posY, interp);
             }
+            // blend between current and new animation
+            if (_amount != undefined) {
+                pos_x = lerp(slot.posX, pos_x, _amount);
+                pos_y = lerp(slot.posY, pos_y, _amount);
+                angle = __disarm_animation_lerp_angle(slot.angle, angle, 1, _amount);
+                scale_x = lerp(slot.scaleX, scale_x, _amount);
+                scale_y = lerp(slot.scaleY, scale_y, _amount);
+                pivot_x = lerp(slot.pivotX, pivot_x, _amount);
+                pivot_y = lerp(slot.pivotY, pivot_y, _amount);
+                alpha = lerp(slot.alpha, alpha, _amount);
+            }
             // apply transformations
             slot.folder = folder;
             slot.file = file;
@@ -768,6 +790,15 @@ function disarm_animation_add(_arm, _anim, _amount, _blend_mode="overlay") {
                 scale_x = lerp(scale_x, key_next.scaleX, interp);
                 scale_y = lerp(scale_y, key_next.scaleY, interp);
                 alpha = lerp(pos_y, key_next.posY, interp);
+            }
+            // blend between current and new animation
+            if (_amount != undefined) {
+                pos_x = lerp(slot.posX, pos_x, _amount);
+                pos_y = lerp(slot.posY, pos_y, _amount);
+                angle = __disarm_animation_lerp_angle(slot.angle, angle, 1, _amount);
+                scale_x = lerp(slot.scaleX, scale_x, _amount);
+                scale_y = lerp(slot.scaleY, scale_y, _amount);
+                alpha = lerp(slot.alpha, alpha, _amount);
             }
             // apply transformations
             slot.posX = pos_x;
