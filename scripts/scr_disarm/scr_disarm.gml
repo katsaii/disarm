@@ -1162,7 +1162,7 @@ function disarm_mesh_add_armature(_mesh, _arm) {
             }
             var vbuff = batches[_mesh.batchCount].vbuff;
             var colour = c_white;
-            var alpha = 1;
+            var alpha = slot.alpha;
             var a_x = slot.aX;
             var a_y = slot.aY;
             var b_x = slot.bX;
