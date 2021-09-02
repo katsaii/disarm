@@ -984,8 +984,8 @@ function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
     draw_set_alpha(default_alpha);
 }
 
-/// @desc Returns the disarm vertex format.
-function disarm_vertex_format() {
+/// @desc Returns the preferred vertex format.
+function __disarm_get_full_fat_vertex_format() {
     static format = (function() {
         vertex_format_begin();
         vertex_format_add_position();
@@ -994,6 +994,66 @@ function disarm_vertex_format() {
         return vertex_format_end();
     })();
     return format;
+}
+
+/// @desc Creates a new Disarm mesh.
+function disarm_mesh_create() {
+    return {
+        partialBatch : false,
+        batches : [],
+        batchCount : 0,
+        batchCapacity : 0,
+    };
+}
+
+/// @desc Destroys this Disarm mesh.
+/// @param {struct} mesh The mesh to destroy.
+function disarm_mesh_destroy(_mesh) {
+    __disarm_mesh_batch_end(_mesh);
+    var batches = _mesh.batches;
+    for (var i = _mesh.batchCapacity - 1; i >= 0; i -= 1) {
+        var batch = batches[i];
+        vertex_delete_buffer(batch.vbuff);
+    }
+}
+
+/// @desc Resets the draw options for this mesh.
+/// @param {struct} mesh The mesh to begin drawing.
+function disarm_mesh_begin(_mesh) {
+    __disarm_mesh_batch_end(_mesh);
+    _mesh.batchCount = 0;
+}
+
+/// @desc Finalises the drawing of this mesh.
+/// @param {struct} mesh The mesh to finalise drawing.
+function disarm_mesh_end(_mesh) {
+    __disarm_mesh_batch_end(_mesh);
+}
+
+/// @desc Starts a new mesh batch
+/// @param {struct} mesh The mesh to add a new batch to.
+function __disarm_mesh_batch_end(_mesh) {
+    if (_mesh.partialBatch) {
+        vertex_end(_mesh.batches[_mesh.batchCount]);
+        _mesh.partialBatch = false;
+        _mesh.batchCount += 1;
+    }
+}
+
+/// @desc Starts a new mesh batch
+/// @param {struct} mesh The mesh to add a new batch to.
+/// @param {pointer} texture The pointer to the texture to use.
+function __disarm_mesh_batch_begin(_mesh, _texture) {
+    _mesh.partialBatch = true;
+    var i = _mesh.batchCount;
+    if (i >= _mesh.batchCapacity) {
+        array_push(_mesh.batches, {
+            vbuff : vertex_create_buffer(),
+            page : _texture,
+        });
+        _mesh.batchCapacity += 1;
+    }
+    vertex_begin(_mesh.batches[i].vbuff, __disarm_get_full_fat_vertex_format());
 }
 
 /// @desc Attempts to get a string value from a struct, and returns a default value
