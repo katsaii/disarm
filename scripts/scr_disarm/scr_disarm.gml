@@ -182,19 +182,25 @@ function disarm_import(_events) {
                     get_atlas : get_atlas,
                     get_image : get_image,
                 }, __disarm_import_atlas)),
+        atlasTable : { },
         folders : __disarm_array_map(
                 __disarm_struct_get_array(struct, "folder"),
                 __disarm_import_folder),
         entities : __disarm_array_map(
                 __disarm_struct_get_array(struct, "entity"),
                 __disarm_import_entity),
+        entityTable : { },
         currentEntity : 0,
-        entityTable : { }
     };
     var entities = arm.entities;
     var entity_table = arm.entityTable;
     for (var i = array_length(entities) - 1; i >= 0; i -= 1) {
         entity_table[$ entities[i].name] = i;
+    }
+    var atlases = arm.atlases;
+    var atlas_table = arm.atlasTable;
+    for (var i = array_length(atlases) - 1; i >= 0; i -= 1) {
+        atlas_table[$ atlases[i].name] = i;
     }
     return arm;
 }
@@ -691,7 +697,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
             angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
             scale_x = lerp(scale_x, key_next.scaleX, interp);
             scale_y = lerp(scale_y, key_next.scaleY, interp);
-            alpha = lerp(pos_y, key_next.posY, interp);
+            alpha = lerp(alpha, key_next.alpha, interp);
         }
         var bone = info[timeline.slot];
         // blend between current and new animation
@@ -748,7 +754,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
                 scale_y = lerp(scale_y, key_next.scaleY, interp);
                 pivot_x = lerp(pivot_x, key_next.pivotX, interp);
                 pivot_y = lerp(pivot_y, key_next.pivotY, interp);
-                alpha = lerp(pos_y, key_next.posY, interp);
+                alpha = lerp(alpha, key_next.alpha, interp);
             }
             // blend between current and new animation
             if (_amount != undefined) {
@@ -789,7 +795,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
                 angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
                 scale_x = lerp(scale_x, key_next.scaleX, interp);
                 scale_y = lerp(scale_y, key_next.scaleY, interp);
-                alpha = lerp(pos_y, key_next.posY, interp);
+                alpha = lerp(alpha, key_next.alpha, interp);
             }
             // blend between current and new animation
             if (_amount != undefined) {
@@ -1030,11 +1036,15 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
 
 /// @desc Renders a debug view of the armature atlas.
 /// @param {struct} arm The Disarm instance to render.
-/// @param {real} [atlas_id] THe id of the atlas the draw.
-function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
-    var atlas = _arm.atlases[_atlas_id];
-    var width = atlas.width;
-    var height = atlas.height;
+/// @param {name} name The name of the atlas the draw.
+/// @param {real} x The x position to render the atlas debug window.
+/// @param {real} y The y position to render the atlas debug window.
+/// @param {real} [width] The width of the debug window.
+/// @param {real} [height] The height of the debug window.
+function disarm_draw_debug_atlas(_arm, _name, _x, _y, _width=undefined, _height=undefined) {
+    var atlas = _arm.atlases[_arm.atlasTable[$ _name]];
+    var width = _width == undefined ? atlas.width : _width;
+    var height = _height == undefined ? atlas.height : _height;
     var sprite_data = atlas.image;
     var frame_table = atlas.frameTable;
     var frame_names = variable_struct_get_names(frame_table);
@@ -1043,27 +1053,26 @@ function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
     draw_set_alpha(1);
     draw_set_colour(c_white);
     draw_primitive_begin_texture(pr_trianglestrip, sprite_data.page);
-    var padding = 10;
     var uv_left = sprite_data.uvLeft;
     var uv_top = sprite_data.uvTop;
     var uv_right = sprite_data.uvRight;
     var uv_bottom = sprite_data.uvBottom;
-    draw_vertex_texture(padding, padding + height, uv_left, uv_bottom);
-    draw_vertex_texture(padding + width, padding + height, uv_right, uv_bottom);
-    draw_vertex_texture(padding, padding, uv_left, uv_top);
-    draw_vertex_texture(padding + width, padding, uv_right, uv_top);
+    draw_vertex_texture(_x, _y + height, uv_left, uv_bottom);
+    draw_vertex_texture(_x + width, _y + height, uv_right, uv_bottom);
+    draw_vertex_texture(_x, _y, uv_left, uv_top);
+    draw_vertex_texture(_x + width, _y, uv_right, uv_top);
     draw_primitive_end();
     for (var i = array_length(frame_names) - 1; i >= 0; i -= 1) {
         var frame_name = frame_names[i];
         var frame = frame_table[$ frame_name];
-        var a_x = padding + lerp(0, width, frame.aU);
-        var a_y = padding + lerp(0, height, frame.aV);
-        var b_x = padding + lerp(0, width, frame.bU);
-        var b_y = padding + lerp(0, height, frame.bV);
-        var c_x = padding + lerp(0, width, frame.cU);
-        var c_y = padding + lerp(0, height, frame.cV);
-        var d_x = padding + lerp(0, width, frame.dU);
-        var d_y = padding + lerp(0, height, frame.dV);
+        var a_x = _x + lerp(0, width, frame.aU);
+        var a_y = _y + lerp(0, height, frame.aV);
+        var b_x = _x + lerp(0, width, frame.bU);
+        var b_y = _y + lerp(0, height, frame.bV);
+        var c_x = _x + lerp(0, width, frame.cU);
+        var c_y = _y + lerp(0, height, frame.cV);
+        var d_x = _x + lerp(0, width, frame.dU);
+        var d_y = _y + lerp(0, height, frame.dV);
         var colour = c_red;
         var alpha = 1;
         draw_primitive_begin(pr_linestrip);
