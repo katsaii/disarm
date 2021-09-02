@@ -305,11 +305,20 @@ function __disarm_import_entity(_struct) {
                 __disarm_struct_get_array(_struct, "animation"),
                 __disarm_import_entity_animation),
         animTable : { },
+        skins : __disarm_array_map(
+                __disarm_struct_get_array(_struct, "character_map"),
+                __disarm_import_entity_character_map),
+        skinTable : { },
     };
     var anims = entity.anims;
     var anim_table = entity.animTable;
     for (var i = array_length(anims) - 1; i >= 0; i -= 1) {
         anim_table[$ anims[i].name] = i;
+    }
+    var skins = entity.skins;
+    var skin_table = entity.skinTable;
+    for (var i = array_length(skins) - 1; i >= 0; i -= 1) {
+        skin_table[$ skins[i].name] = i;
     }
     return entity;
 }
@@ -467,6 +476,24 @@ function __disarm_import_entity_animation_timeline_keyframe_point(_struct) {
     key.scaleY = __disarm_struct_get_numeric_or_default(slot, "scale_y", 1);
     key.alpha = __disarm_struct_get_numeric_or_default(slot, "a", 1);
     return key;
+}
+
+/// @desc Creates a new Disarm entity character map definition.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_character_map(_struct) {
+    return {
+        name : __disarm_struct_get_string_or_default(_struct, "name"),
+        map : __disarm_array_map(
+                __disarm_struct_get_array(_struct, "map"),
+                function(_struct) {
+                    return {
+                        sourceFile : __disarm_struct_get_numeric_or_default(_struct, "file", -1),
+                        sourceFolder : __disarm_struct_get_numeric_or_default(_struct, "folder", -1),
+                        destFile : __disarm_struct_get_numeric_or_default(_struct, "target_file", -1),
+                        destFolder : __disarm_struct_get_numeric_or_default(_struct, "target_folder", -1),
+                    };
+                }),
+    };
 }
 
 /// @desc Returns whether an entity exists with this name.
