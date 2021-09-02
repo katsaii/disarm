@@ -1042,9 +1042,10 @@ function disarm_mesh_add_armature(_mesh, _arm) {
     var entity = _arm.entities[_arm.currentEntity];
     var atlases = _arm.atlases;
     var slots = entity.slotsDrawOrder;
+    var slot_count = array_length(slots);
     var page = _mesh.currentPage;
     var batches = _mesh.batches;
-    for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
+    for (var i = 0; i < slot_count; i += 1) {
         var slot = slots[i];
         switch (slot.type) {
         case "sprite":
