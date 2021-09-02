@@ -484,7 +484,7 @@ function __disarm_import_entity_animation_timeline_keyframe_point(_struct) {
 function __disarm_import_entity_character_map(_struct) {
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
-        map : __disarm_array_map(
+        maps : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "map"),
                 function(_struct) {
                     return {
@@ -509,6 +509,30 @@ function disarm_entity_exists(_arm, _entity) {
 /// @param {real} entity The name of the entity to set.
 function disarm_entity_set(_arm, _entity) {
     _arm.currentEntity = _arm.entityTable[$ _entity];
+}
+
+/// @desc Clears the current character map state.
+/// @param {struct} arm The Disarm instance to update.
+function disarm_skin_clear(_arm) {
+    var entity = _arm.entities[_arm.currentEntity];
+    entity.activeSkin = { };
+}
+
+/// @desc Adds a new character map, or array of character maps, or the current active skin.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {value} name The name, or array of names, of character maps to add.
+function disarm_skin_add(_arm, _name) {
+    var entity = _arm.entities[_arm.currentEntity];
+    var skin = entity.activeSkin;
+    var maps = entity.skins[entity.skinTable[$ _name]].maps;
+    for (var i = array_length(maps) - 1; i >= 0; i -= 1) {
+        var map = maps[i];
+        var folder = string(map.sourceFolder);
+        if not (variable_struct_exists(skin, folder)) {
+            skin[$ folder] = { };
+        }
+        skin[$ folder][$ string(map.sourceFile)] = [map.destFolder, map.destFile];
+    }
 }
 
 /// @desc Returns whether an animation exists with this name.
@@ -780,7 +804,7 @@ function disarm_animation_end(_arm) {
             var idx_file = slot.file;
             var folder_map = skin[$ string(idx_folder)];
             if (folder_map != undefined) {
-                var file_map = skin[$ string(idx_file)];
+                var file_map = folder_map[$ string(idx_file)];
                 if (file_map != undefined) {
                     idx_folder = file_map[0];
                     idx_file = file_map[1];
@@ -903,7 +927,7 @@ function __disarm_apply_forward_kinematics(_x, _y, _angle) {
 }
 
 /// @desc Renders a debug view of the armature.
-/// @param {struct} disarm The Disarm instance to render.
+/// @param {struct} arm The Disarm instance to render.
 /// @param {matrix} transform The global transformation to apply to this armature.
 function disarm_draw_debug(_arm, _matrix=undefined) {
     var entity = _arm.entities[_arm.currentEntity];
@@ -974,7 +998,7 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
 }
 
 /// @desc Renders a debug view of the armature atlas.
-/// @param {struct} disarm The Disarm instance to render.
+/// @param {struct} arm The Disarm instance to render.
 /// @param {real} [atlas_id] THe id of the atlas the draw.
 function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
     var atlas = _arm.atlases[_atlas_id];
