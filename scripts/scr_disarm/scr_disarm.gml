@@ -992,8 +992,7 @@ function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
 function __disarm_get_full_fat_vertex_format() {
     static format = (function() {
         vertex_format_begin();
-        vertex_format_add_position_3d();
-        vertex_format_add_normal();
+        vertex_format_add_position();
         vertex_format_add_colour();
         vertex_format_add_texcoord();
         return vertex_format_end();
@@ -1089,28 +1088,22 @@ function disarm_mesh_add_armature(_mesh, _arm) {
             var c_v = lerp(uv_top, uv_bottom, frame.cV);
             var d_u = lerp(uv_left, uv_right, frame.dU);
             var d_v = lerp(uv_top, uv_bottom, frame.dV);
-            vertex_position_3d(vbuff, a_x, a_y, i);
-            vertex_normal(vbuff, 0, 0, 1);
+            vertex_position(vbuff, a_x, a_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, a_u, a_v);
-            vertex_position_3d(vbuff, b_x, b_y, i);
-            vertex_normal(vbuff, 0, 0, 1);
+            vertex_position(vbuff, b_x, b_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, b_u, b_v);
-            vertex_position_3d(vbuff, d_x, d_y, i);
-            vertex_normal(vbuff, 0, 0, 1);
+            vertex_position(vbuff, d_x, d_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, d_u, d_v);
-            vertex_position_3d(vbuff, d_x, d_y, i);
-            vertex_normal(vbuff, 0, 0, 1);
+            vertex_position(vbuff, d_x, d_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, d_u, d_v);
-            vertex_position_3d(vbuff, b_x, b_y, i);
-            vertex_normal(vbuff, 0, 0, 1);
+            vertex_position(vbuff, b_x, b_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, b_u, b_v);
-            vertex_position_3d(vbuff, c_x, c_y, i);
-            vertex_normal(vbuff, 0, 0, 1);
+            vertex_position(vbuff, c_x, c_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, c_u, c_v);
             break;
