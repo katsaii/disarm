@@ -27,9 +27,12 @@ function __disarm_get_static_sprite_manager() {
 /// @param {real} sprite The id of the sprite to package.
 /// @param {real} [subimg] The id of the subimage to use.
 function __disarm_make_sprite_information(_sprite, _subimg=0) {
-    var idx_spr = sprite_exists(_sprite) ? _sprite : -1;
+    var idx_spr = sprite_exists(_sprite) &&
+            _subimg >= 0 &&
+            _subimg < sprite_get_number(_sprite) ? _sprite : -1;
     var sprite_data = {
         idx : idx_spr,
+        img : _subimg,
         page : -1,
         uvLeft : 0,
         uvTop : 0,
@@ -52,7 +55,7 @@ function __disarm_make_sprite_information(_sprite, _subimg=0) {
         var uv_height = (uv_bottom - uv_top) / uv_y_ratio;
         var uv_kw = uv_width / width;
         var uv_kh = uv_height / height;
-        sprite_data.page = sprite_get_texture(_sprite, _subimg);
+        sprite_data.page = sprite_get_info(_sprite).frames[_subimg].texture;
         sprite_data.uvLeft = uv_left - uv_x_offset * uv_kw;
         sprite_data.uvTop = uv_top - uv_y_offset * uv_kh;
         sprite_data.uvRight = sprite_data.uvLeft + uv_width;
@@ -234,17 +237,17 @@ function __disarm_import_atlas(_struct) {
             b_u = uv_right;
             b_v = uv_bottom;
             c_u = uv_left;
-            c_v = uv_top;
+            c_v = uv_bottom;
             d_u = uv_left;
-            d_v = uv_bottom;
+            d_v = uv_top;
         } else {
             a_u = uv_left;
             a_v = uv_top;
             b_u = uv_right;
             b_v = uv_top;
-            c_u = uv_left;
+            c_u = uv_right;
             c_v = uv_bottom;
-            d_u = uv_right;
+            d_u = uv_left;
             d_v = uv_bottom;
         }
         frame_table[$ frame_name] = {
@@ -256,6 +259,8 @@ function __disarm_import_atlas(_struct) {
         name : name,
         image : get_image(__disarm_struct_get_string_or_default(meta, "image")),
         frameTable : frame_table,
+        width : width,
+        height : height,
     };
 }
 
@@ -858,7 +863,7 @@ function __disarm_apply_forward_kinematics(_x, _y, _angle) {
 }
 
 /// @desc Renders a debug view of the armature.
-/// @param {struct} Disarm The Disarm instance to render.
+/// @param {struct} disarm The Disarm instance to render.
 /// @param {matrix} transform The global transformation to apply to this armature.
 function disarm_draw_debug(_arm, _matrix=undefined) {
     var entity = _arm.entities[_arm.currentEntity];
@@ -923,6 +928,57 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
     }
     if (_matrix != undefined) {
         matrix_set(matrix_world, _matrix);
+    }
+    draw_set_colour(default_colour);
+    draw_set_alpha(default_alpha);
+}
+
+/// @desc Renders a debug view of the armature atlas.
+/// @param {struct} disarm The Disarm instance to render.
+/// @param {real} [atlas_id] THe id of the atlas the draw.
+function disarm_draw_debug_atlas(_arm, _atlas_id=0) {
+    var atlas = _arm.atlases[_atlas_id];
+    var width = atlas.width;
+    var height = atlas.height;
+    var sprite_data = atlas.image;
+    var frame_table = atlas.frameTable;
+    var frame_names = variable_struct_get_names(frame_table);
+    var default_colour = draw_get_color();
+    var default_alpha = draw_get_alpha();
+    draw_set_alpha(1);
+    draw_set_colour(c_white);
+    draw_primitive_begin_texture(pr_trianglestrip, sprite_data.page);
+    var padding = 10;
+    var uv_left = sprite_data.uvLeft;
+    var uv_top = sprite_data.uvTop;
+    var uv_right = sprite_data.uvRight;
+    var uv_bottom = sprite_data.uvBottom;
+    draw_vertex_texture(padding, padding + height, uv_left, uv_bottom);
+    draw_vertex_texture(padding + width, padding + height, uv_right, uv_bottom);
+    draw_vertex_texture(padding, padding, uv_left, uv_top);
+    draw_vertex_texture(padding + width, padding, uv_right, uv_top);
+    draw_primitive_end();
+    for (var i = array_length(frame_names) - 1; i >= 0; i -= 1) {
+        var frame_name = frame_names[i];
+        var frame = frame_table[$ frame_name];
+        var a_x = padding + lerp(0, width, frame.aU);
+        var a_y = padding + lerp(0, height, frame.aV);
+        var b_x = padding + lerp(0, width, frame.bU);
+        var b_y = padding + lerp(0, height, frame.bV);
+        var c_x = padding + lerp(0, width, frame.cU);
+        var c_y = padding + lerp(0, height, frame.cV);
+        var d_x = padding + lerp(0, width, frame.dU);
+        var d_y = padding + lerp(0, height, frame.dV);
+        var colour = c_red;
+        var alpha = 1;
+        draw_primitive_begin(pr_linestrip);
+        draw_vertex_color(a_x, a_y, colour, alpha);
+        draw_vertex_color(b_x, b_y, colour, alpha);
+        draw_vertex_color(c_x, c_y, colour, alpha);
+        draw_vertex_color(d_x, d_y, colour, alpha);
+        draw_vertex_color(a_x, a_y, colour, alpha);
+        draw_primitive_end();
+        draw_text_color(a_x, a_y, frame_name, colour, colour, colour, colour, alpha);
     }
     draw_set_colour(default_colour);
     draw_set_alpha(default_alpha);
