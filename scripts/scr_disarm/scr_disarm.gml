@@ -224,7 +224,7 @@ function __disarm_import_atlas(_struct) {
     for (var i = array_length(frame_names) - 1; i >= 0; i -= 1) {
         var frame_name = frame_names[i];
         var frame_data = frames[$ frame_name];
-        var rotate = __disarm_struct_get_numeric_or_default(frame_data, "rotated");
+        var rotate = __disarm_struct_get_bool_or_default(frame_data, "rotated");
         var frame_size = __disarm_struct_get_struct(frame_data, "frame");
         var tex_x = __disarm_struct_get_numeric_or_default(frame_size, "x");
         var tex_y = __disarm_struct_get_numeric_or_default(frame_size, "y");
@@ -285,7 +285,7 @@ function __disarm_import_folder(_struct) {
                         height : __disarm_struct_get_numeric_or_default(_struct, "height", 1),
                         pivotX : __disarm_struct_get_numeric_or_default(_struct, "pivot_x"),
                         pivotY : __disarm_struct_get_numeric_or_default(_struct, "pivot_y", 1),
-                        atlasRotated : __disarm_struct_get_string_or_default(_struct, "arot", "false") == "true",
+                        //atlasRotated : __disarm_struct_get_bool_or_default(_struct, "arot"),
                         atlasWidth : __disarm_struct_get_numeric_or_default(_struct, "aw", 1),
                         atlasHeight : __disarm_struct_get_numeric_or_default(_struct, "ah", 1),
                         //atlasX : __disarm_struct_get_numeric_or_default(_struct, "ax"),
@@ -511,7 +511,7 @@ function __disarm_import_entity_character_map(_struct) {
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} entity The name of the entity to check.
 function disarm_entity_exists(_arm, _entity) {
-    return variable_struct_exists(_arm.entityTable, _entity);
+    return variable_struct_exists(_arm.entityTable, string(_entity));
 }
 
 /// @desc Adds an animation to the armature pose.
@@ -533,7 +533,7 @@ function disarm_skin_clear(_arm) {
 /// @param {real} skin The name of the skin to check.
 function disarm_skin_exists(_arm, _skin) {
     var entity = _arm.entities[_arm.currentEntity];
-    return variable_struct_exists(entity.skinTable, _skin);
+    return variable_struct_exists(entity.skinTable, string(_skin));
 }
 
 /// @desc Adds a new character map, or array of character maps, or the current active skin.
@@ -565,7 +565,7 @@ function disarm_skin_add(_arm, _skin_names) {
 /// @param {real} slot The name of the slot to check.
 function disarm_slot_exists(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
-    return variable_struct_exists(entity.slotTable, _slot);
+    return variable_struct_exists(entity.slotTable, string(_slot));
 }
 
 /// @desc Returns a reference to the slot data with this name. Note: any changes made to this
@@ -581,7 +581,7 @@ function disarm_slot_get_data(_arm, _slot) {
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} anim The name of the animation to check.
 function disarm_animation_exists(_arm, _anim) {
-    return variable_struct_exists(_arm.entities[_arm.currentEntity].animTable, _anim);
+    return variable_struct_exists(_arm.entities[_arm.currentEntity].animTable, string(_anim));
 }
 
 /// @desc Returns the linear interpolation of two keyframe times.
@@ -913,10 +913,10 @@ function disarm_animation_end(_arm, _x=0, _y=0, _xscale=1, _yscale=1, _angle=0) 
             var source_top = -pivot_y * file.height;
             var source_right = source_left + file.width;
             var source_bottom = source_top + file.height;
-            var left = source_left; //source_left + file.atlasXOff;
-            var top = source_top; //source_top + file.atlasYOff;
-            var right = source_right; //left + file.atlasWidth;
-            var bottom = source_bottom; //top + file.atlasHeight;
+            var left = source_left + file.atlasXOff;
+            var top = source_top + file.atlasYOff;
+            var right = left + file.atlasWidth;
+            var bottom = top + file.atlasHeight;
             var slot_x = slot.posX;
             var slot_y = slot.posY;
             var slot_scale_x = slot.scaleX;
@@ -1367,6 +1367,34 @@ function __disarm_struct_get_numeric_or_default(_struct, _key, _default=0) {
             try {
                 var n = real(value);
                 return n;
+            } catch (_) { }
+        }
+    }
+    return _default;
+}
+
+/// @desc Attempts to get a Boolean value from a struct, and returns a default value
+///       if it doesn't exist.
+/// @param {struct} struct The struct to check.
+/// @param {string} key The key to check.
+/// @param {value} [default] The default value.
+function __disarm_struct_get_bool_or_default(_struct, _key, _default=false) {
+    if (variable_struct_exists(_struct, _key)) {
+        var value = _struct[$ _key];
+        if (is_string(value)) {
+            switch (value) {
+            case "true":
+                return true;
+            case "false":
+                return false;
+            }
+        }
+        if (is_numeric(value)) {
+            return bool(value);
+        } else {
+            try {
+                var b = bool(value);
+                return b;
             } catch (_) { }
         }
     }
