@@ -890,8 +890,8 @@ function disarm_animation_end(_arm, _x=0, _y=0, _xscale=1, _yscale=1, _angle=0) 
             __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
-            var left = -file.pivotX;
-            var top = -file.pivotY;
+            var left = -file.pivotX * file.width;
+            var top = -file.pivotY * file.height;
             var right = left + file.width;
             var bottom = top + file.height;
             var slot_x = slot.posX;
