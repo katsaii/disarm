@@ -283,15 +283,17 @@ function __disarm_import_folder(_struct) {
                         name : __disarm_struct_get_string_or_default(_struct, "name"),
                         width : __disarm_struct_get_numeric_or_default(_struct, "width", 1),
                         height : __disarm_struct_get_numeric_or_default(_struct, "height", 1),
-                        aWidth : __disarm_struct_get_numeric_or_default(_struct, "aw", 1),
-                        aHeight : __disarm_struct_get_numeric_or_default(_struct, "ah", 1),
-                        aX : __disarm_struct_get_numeric_or_default(_struct, "ax"),
-                        aY : __disarm_struct_get_numeric_or_default(_struct, "ay"),
-                        aXOff : __disarm_struct_get_numeric_or_default(_struct, "axoff"),
-                        aYOff : __disarm_struct_get_numeric_or_default(_struct, "ayoff"),
                         pivotX : __disarm_struct_get_numeric_or_default(_struct, "pivot_x"),
-                        pivotY : __disarm_struct_get_numeric_or_default(_struct, "pivot_y"),
-                    }
+                        pivotY : __disarm_struct_get_numeric_or_default(_struct, "pivot_y", 1),
+                        atlasRotated : __disarm_struct_get_string_or_default(_struct, "arot", "false") == "true",
+                        atlasWidth : __disarm_struct_get_numeric_or_default(_struct, "aw", 1),
+                        atlasHeight : __disarm_struct_get_numeric_or_default(_struct, "ah", 1),
+                        //atlasX : __disarm_struct_get_numeric_or_default(_struct, "ax"),
+                        //atlasY : __disarm_struct_get_numeric_or_default(_struct, "ay"),
+                        atlasXOff : __disarm_struct_get_numeric_or_default(_struct, "axoff"),
+                        atlasYOff : __disarm_struct_get_numeric_or_default(_struct, "ayoff"),
+                    };
+                    
                 }),
     };
 }
@@ -466,6 +468,7 @@ function __disarm_import_entity_animation_timeline_keyframe_sprite(_struct) {
     key.angle = __disarm_struct_get_numeric_or_default(slot, "angle");
     key.scaleX = __disarm_struct_get_numeric_or_default(slot, "scale_x", 1);
     key.scaleY = __disarm_struct_get_numeric_or_default(slot, "scale_y", 1);
+    key.useDefaultPivot = !variable_struct_exists(slot, "pivot_x") && !variable_struct_exists(slot, "pivot_y");
     key.pivotX = __disarm_struct_get_numeric_or_default(slot, "pivot_x");
     key.pivotY = __disarm_struct_get_numeric_or_default(slot, "pivot_y", 1);
     key.alpha = __disarm_struct_get_numeric_or_default(slot, "a", 1);
@@ -620,6 +623,7 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
                 angle : 0,
                 scaleX : 1,
                 scaleY : 1,
+                useDefaultPivot : true,
                 pivotX : 0,
                 pivotY : 1,
                 alpha : 1,
@@ -773,6 +777,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
             var angle = key.angle;
             var scale_x = key.scaleX;
             var scale_y = key.scaleY;
+            var pivot_use_default = key.useDefaultPivot;
             var pivot_x = key.pivotX;
             var pivot_y = key.pivotY;
             var alpha = key.alpha;
@@ -784,8 +789,10 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
                 angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
                 scale_x = lerp(scale_x, key_next.scaleX, interp);
                 scale_y = lerp(scale_y, key_next.scaleY, interp);
-                pivot_x = lerp(pivot_x, key_next.pivotX, interp);
-                pivot_y = lerp(pivot_y, key_next.pivotY, interp);
+                if not (pivot_use_default) {
+                    pivot_x = lerp(pivot_x, key_next.pivotX, interp);
+                    pivot_y = lerp(pivot_y, key_next.pivotY, interp);
+                }
                 alpha = lerp(alpha, key_next.alpha, interp);
             }
             // blend between current and new animation
@@ -795,8 +802,10 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
                 angle = __disarm_animation_lerp_angle(slot.angle, angle, 1, _amount);
                 scale_x = lerp(slot.scaleX, scale_x, _amount);
                 scale_y = lerp(slot.scaleY, scale_y, _amount);
-                pivot_x = lerp(slot.pivotX, pivot_x, _amount);
-                pivot_y = lerp(slot.pivotY, pivot_y, _amount);
+                if not (pivot_use_default) {
+                    pivot_x = lerp(slot.pivotX, pivot_x, _amount);
+                    pivot_y = lerp(slot.pivotY, pivot_y, _amount);
+                }
                 alpha = lerp(slot.alpha, alpha, _amount);
             }
             // apply transformations
@@ -807,6 +816,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
             slot.angle = angle;
             slot.scaleX = scale_x;
             slot.scaleY = scale_y;
+            slot.useDefaultPivot = pivot_use_default;
             slot.pivotX = pivot_x;
             slot.pivotY = pivot_y;
             slot.alpha = alpha;
@@ -890,10 +900,23 @@ function disarm_animation_end(_arm, _x=0, _y=0, _xscale=1, _yscale=1, _angle=0) 
             __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
-            var left = -file.pivotX * file.width;
-            var top = -file.pivotY * file.height;
-            var right = left + file.width;
-            var bottom = top + file.height;
+            var pivot_x, pivot_y;
+            if (slot.useDefaultPivot) {
+                pivot_x = file.pivotX;
+                pivot_y = file.pivotY;
+            } else {
+                pivot_x = slot.pivotX;
+                pivot_y = slot.pivotY;
+            }
+            pivot_y = 1 - pivot_y; // why would you do this to me
+            var source_left = -pivot_x * file.width;
+            var source_top = -pivot_y * file.height;
+            var source_right = source_left + file.width;
+            var source_bottom = source_top + file.height;
+            var left = source_left; //source_left + file.atlasXOff;
+            var top = source_top; //source_top + file.atlasYOff;
+            var right = source_right; //left + file.atlasWidth;
+            var bottom = source_bottom; //top + file.atlasHeight;
             var slot_x = slot.posX;
             var slot_y = slot.posY;
             var slot_scale_x = slot.scaleX;
@@ -1051,12 +1074,14 @@ function disarm_draw_debug(_arm) {
         case "sprite":
             var alpha = 1;
             var col = c_green;
+            draw_set_colour(col);
+            draw_arrow(slot.aX, slot.aY, slot.bX, slot.bY, 10 * slot.scaleY);
             draw_primitive_begin(pr_linestrip);
-            draw_vertex_color(slot.aX, slot.aY, col, alpha);
             draw_vertex_color(slot.bX, slot.bY, col, alpha);
             draw_vertex_color(slot.cX, slot.cY, col, alpha);
             draw_vertex_color(slot.dX, slot.dY, col, alpha);
-            draw_vertex_color(slot.aX, slot.aY, col, 0);
+            draw_vertex_color(slot.aX, slot.aY, col, alpha);
+            draw_vertex_color(slot.posX, slot.posY, col, alpha);
             draw_primitive_end();
             draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
             break;
