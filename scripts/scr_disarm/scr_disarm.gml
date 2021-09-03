@@ -525,13 +525,21 @@ function disarm_skin_clear(_arm) {
     entity.activeSkin = { };
 }
 
+/// @desc Returns whether a character map exists with this name.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} skin The name of the skin to check.
+function disarm_skin_exists(_arm, _skin) {
+    var entity = _arm.entities[_arm.currentEntity];
+    return variable_struct_exists(entity.skinTable, _skin);
+}
+
 /// @desc Adds a new character map, or array of character maps, or the current active skin.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {value} name The name, or array of names, of character maps to add.
-function disarm_skin_add(_arm, _name) {
+/// @param {value} skin The name, or array of names, of character maps to add.
+function disarm_skin_add(_arm, _skin) {
     var entity = _arm.entities[_arm.currentEntity];
     var skin = entity.activeSkin;
-    var maps = entity.skins[entity.skinTable[$ _name]].maps;
+    var maps = entity.skins[entity.skinTable[$ _skin]].maps;
     for (var i = array_length(maps) - 1; i >= 0; i -= 1) {
         var map = maps[i];
         var folder = string(map.sourceFolder);
@@ -540,6 +548,23 @@ function disarm_skin_add(_arm, _name) {
         }
         skin[$ folder][$ string(map.sourceFile)] = [map.destFolder, map.destFile];
     }
+}
+
+/// @desc Returns whether a slot exists with this name.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} slot The name of the slot to check.
+function disarm_slot_exists(_arm, _slot) {
+    var entity = _arm.entities[_arm.currentEntity];
+    return variable_struct_exists(entity.slotTable, _slot);
+}
+
+/// @desc Returns a reference to the slot data with this name. Note: any changes made to this
+///       struct will affect the representation of the slot in the armature.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} slot The name of the slot to check.
+function disarm_slot_get_data(_arm, _slot) {
+    var entity = _arm.entities[_arm.currentEntity];
+    return entity.slotTable[$ _slot];
 }
 
 /// @desc Returns whether an animation exists with this name.
