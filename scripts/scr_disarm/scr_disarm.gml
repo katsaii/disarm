@@ -822,14 +822,19 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
 
 /// @desc Updates the world transformation of armature objects.
 /// @param {struct} arm The Disarm instance to update.
-function disarm_animation_end(_arm) {
+/// @param {real} [x] The x-offset of the armature.
+/// @param {real} [y] The y-offset of the armature.
+/// @param {real} [xscale] The x-scale of the armature.
+/// @param {real} [yscale] The y-scale of the armature.
+/// @param {real} [angle] The rotation of the armature.
+function disarm_animation_end(_arm, _x=0, _y=0, _xscale=1, _yscale=1, _angle=0) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slots;
     var skin = entity.activeSkin;
     var folders = _arm.folders;
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
-        __disarm_update_world_transform_using_object_array(info, i);
+        __disarm_update_world_transform_using_object_array(info, i, _x, _y, _xscale, _yscale, _angle);
     }
     for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
         var slot = slots[i];
@@ -850,7 +855,7 @@ function disarm_animation_end(_arm) {
             if (idx_folder == -1 || idx_file == -1) {
                 continue;
             }
-            __disarm_update_world_transform(slot, bone_parent);
+            __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
             var left = -file.pivotX;
@@ -878,7 +883,7 @@ function disarm_animation_end(_arm) {
             slot.frameName = file.name;
             break;
         case "point":
-            __disarm_update_world_transform(slot, bone_parent);
+            __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
             break;
         }
     }
@@ -910,7 +915,12 @@ function __disarm_wierd_hack_for_array_clone(_in) {
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
 /// @param {array} info The object array.
 /// @param {real} id The object index.
-function __disarm_update_world_transform_using_object_array(_info, _idx) {
+/// @param {real} x The x-offset of the armature.
+/// @param {real} y The y-offset of the armature.
+/// @param {real} xscale The x-scale of the armature.
+/// @param {real} yscale The y-scale of the armature.
+/// @param {real} angle The rotation of the armature.
+function __disarm_update_world_transform_using_object_array(_info, _idx, _x, _y, _xscale, _yscale, _angle) {
     var slot = _info[_idx];
     switch (slot.type) {
     case "bone":
@@ -919,8 +929,9 @@ function __disarm_update_world_transform_using_object_array(_info, _idx) {
             switch (slot.type) {
             case "bone":
                 var idx_parent = slot.boneParent;
-                var bone_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(_info, idx_parent);
-                __disarm_update_world_transform(slot, bone_parent);
+                var bone_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(
+                        _info, idx_parent, _x, _y, _xscale, _yscale, _angle);
+                __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
                 break;
             }
         }
@@ -932,17 +943,28 @@ function __disarm_update_world_transform_using_object_array(_info, _idx) {
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
 /// @param {struct} child The object to update.
 /// @param {struct} parent The parent to use.
-/// @param {real} [up] The direction of the "up" vector.
-function __disarm_update_world_transform(_child, _bone_parent) {
+/// @param {real} x The x-offset of the armature.
+/// @param {real} y The y-offset of the armature.
+/// @param {real} xscale The x-scale of the armature.
+/// @param {real} yscale The y-scale of the armature.
+/// @param {real} angle The rotation of the armature.
+function __disarm_update_world_transform(_child, _bone_parent, _x, _y, _xscale, _yscale, _angle) {
+    var par_x, par_y, par_scale_x, par_scale_y, par_dir, par_alpha;
     if (_bone_parent == undefined) {
-        return;
+        par_x = _x;
+        par_y = _y;
+        par_scale_x = _xscale;
+        par_scale_y = _yscale;
+        par_dir = _angle;
+        par_alpha = 1;
+    } else {
+        par_x = _bone_parent.posX;
+        par_y = _bone_parent.posY;
+        par_scale_x = _bone_parent.scaleX;
+        par_scale_y = _bone_parent.scaleY;
+        par_dir = _bone_parent.angle;
+        par_alpha = _bone_parent.alpha;
     }
-    var par_x = _bone_parent.posX;
-    var par_y = _bone_parent.posY;
-    var par_scale_x = _bone_parent.scaleX;
-    var par_scale_y = _bone_parent.scaleY;
-    var par_dir = _bone_parent.angle;
-    var par_alpha = _bone_parent.alpha;
     _child.angle += par_dir;
     _child.scaleX *= par_scale_x;
     _child.scaleY *= par_scale_y;
@@ -965,19 +987,13 @@ function __disarm_apply_forward_kinematics(_x, _y, _angle) {
 
 /// @desc Renders a debug view of the armature.
 /// @param {struct} arm The Disarm instance to render.
-/// @param {matrix} transform The global transformation to apply to this armature.
-function disarm_draw_debug(_arm, _matrix=undefined) {
+function disarm_draw_debug(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slotsDrawOrder;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
     draw_set_alpha(1);
-    if (_matrix != undefined) {
-        var default_matrix = matrix_get(matrix_world);
-        matrix_set(matrix_world, _matrix);
-        _matrix = default_matrix;
-    }
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         var slot = info[i];
         if not (slot.active) {
@@ -1026,9 +1042,6 @@ function disarm_draw_debug(_arm, _matrix=undefined) {
             draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
             break;
         }
-    }
-    if (_matrix != undefined) {
-        matrix_set(matrix_world, _matrix);
     }
     draw_set_colour(default_colour);
     draw_set_alpha(default_alpha);
