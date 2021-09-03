@@ -536,17 +536,24 @@ function disarm_skin_exists(_arm, _skin) {
 /// @desc Adds a new character map, or array of character maps, or the current active skin.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {value} skin The name, or array of names, of character maps to add.
-function disarm_skin_add(_arm, _skin) {
+function disarm_skin_add(_arm, _skin_names) {
     var entity = _arm.entities[_arm.currentEntity];
     var skin = entity.activeSkin;
-    var maps = entity.skins[entity.skinTable[$ _skin]].maps;
-    for (var i = array_length(maps) - 1; i >= 0; i -= 1) {
-        var map = maps[i];
-        var folder = string(map.sourceFolder);
-        if not (variable_struct_exists(skin, folder)) {
-            skin[$ folder] = { };
+    if not (is_array(_skin_names)) {
+        _skin_names = [_skin_names];
+    }
+    var count = array_length(_skin_names);
+    for (var i = 0; i < count; i += 1) {
+        var skin_name = _skin_names[i];
+        var maps = entity.skins[entity.skinTable[$ skin_name]].maps;
+        for (var j = array_length(maps) - 1; j >= 0; j -= 1) {
+            var map = maps[j];
+            var folder = string(map.sourceFolder);
+            if not (variable_struct_exists(skin, folder)) {
+                skin[$ folder] = { };
+            }
+            skin[$ folder][$ string(map.sourceFile)] = [map.destFolder, map.destFile];
         }
-        skin[$ folder][$ string(map.sourceFile)] = [map.destFolder, map.destFile];
     }
 }
 
