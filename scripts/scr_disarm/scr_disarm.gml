@@ -1020,7 +1020,16 @@ function __disarm_update_world_transform(_child, _bone_parent, _x, _y, _xscale, 
         par_dir = _bone_parent.angle;
         par_alpha = _bone_parent.alpha;
     }
-    _child.angle += par_dir;
+    var dir = _child.angle;
+    if (par_scale_x < 0) {
+        // flip direction through y-axis
+        dir = 180 - dir;
+    }
+    if (par_scale_y < 0) {
+        // flip direction through x-axis
+        dir = -dir;
+    }
+    _child.angle = par_dir + dir;
     _child.scaleX *= par_scale_x;
     _child.scaleY *= par_scale_y;
     _child.alpha *= par_alpha;
@@ -1057,7 +1066,7 @@ function disarm_draw_debug(_arm) {
         switch (slot.type) {
         case "bone":
             var len = slot.width * slot.scaleX;
-            var wid = slot.height * slot.scaleY;
+            var wid = abs(slot.height * slot.scaleY);
             var dir = slot.angle;
             var x1 = slot.posX;
             var y1 = slot.posY;
@@ -1075,7 +1084,7 @@ function disarm_draw_debug(_arm) {
             var alpha = 1;
             var col = c_green;
             draw_set_colour(col);
-            draw_arrow(slot.aX, slot.aY, slot.bX, slot.bY, 10 * slot.scaleY);
+            draw_arrow(slot.aX, slot.aY, slot.bX, slot.bY, abs(10 * slot.scaleY));
             draw_primitive_begin(pr_linestrip);
             draw_vertex_color(slot.bX, slot.bY, col, alpha);
             draw_vertex_color(slot.cX, slot.cY, col, alpha);
