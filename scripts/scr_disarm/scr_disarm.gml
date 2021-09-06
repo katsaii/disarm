@@ -753,7 +753,13 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
         bone.scaleX = scale_x;
         bone.scaleY = scale_y;
         bone.alpha = alpha;
-        bone.boneParent = bone_ref.boneParent;
+        var idx_bone_ref_parent = bone_ref.boneParent;
+        if (idx_bone_ref_parent == -1) {
+            bone.boneParent = -1;
+        } else {
+            var bone_ref_parent = bone_refs[idx_bone_ref_parent];
+            bone.boneParent = timelines[bone_ref_parent.timeline].slot;
+        }
     }
     // apply object animations
     var slot_refs = mainframe.slots;
@@ -857,8 +863,14 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
             slot.alpha = alpha;
             break;
         }
-        slot.boneParent = slot_ref.boneParent;
         slot.zIndex = slot_ref.zIndex;
+        var idx_slot_ref_parent = slot_ref.boneParent;
+        if (idx_slot_ref_parent == -1) {
+            slot.boneParent = -1;
+        } else {
+            var bone_ref_parent = bone_refs[idx_slot_ref_parent];
+            slot.boneParent = timelines[bone_ref_parent.timeline].slot;
+        }
     }
 }
 
@@ -1019,6 +1031,9 @@ function __disarm_update_world_transform(_child, _bone_parent, _x, _y, _xscale, 
         par_scale_y = _bone_parent.scaleY;
         par_dir = _bone_parent.angle;
         par_alpha = _bone_parent.alpha;
+        if (_child.name != "BWaist") {
+            //show_message([_child, _bone_parent]);
+        }
     }
     var dir = _child.angle;
     if (par_scale_x < 0) {
@@ -1058,6 +1073,15 @@ function disarm_draw_debug(_arm) {
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
     draw_set_alpha(1);
+    var update = false;
+    if (keyboard_check_pressed(vk_right)) {
+        update = true;
+        if (variable_global_exists("c")) {
+            global.c += 1;
+        } else {
+            global.c = 0;
+        }
+    }
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         var slot = info[i];
         if not (slot.active) {
@@ -1066,13 +1090,19 @@ function disarm_draw_debug(_arm) {
         switch (slot.type) {
         case "bone":
             var len = slot.width * slot.scaleX;
-            var wid = abs(slot.height * slot.scaleY);
+            var wid = 1;//abs(slot.height * slot.scaleY);
             var dir = slot.angle;
             var x1 = slot.posX;
             var y1 = slot.posY;
             var x2 = x1 + lengthdir_x(len, dir);
             var y2 = y1 + lengthdir_y(len, dir);
             draw_set_colour(slot.invalidWorldTransform ? c_red : c_yellow);
+            if (variable_global_exists("c") && global.c % array_length(info) == i) {
+                draw_set_colour(c_orange);
+                if (update) {
+                    show_debug_message(slot);
+                }
+            }
             draw_arrow(x1, y1, x2, y2, wid);
             break;
         }
@@ -1084,7 +1114,7 @@ function disarm_draw_debug(_arm) {
             var alpha = 1;
             var col = c_green;
             draw_set_colour(col);
-            draw_arrow(slot.aX, slot.aY, slot.bX, slot.bY, abs(10 * slot.scaleY));
+            draw_arrow(slot.aX, slot.aY, slot.bX, slot.bY, abs(1 * slot.scaleY));
             draw_primitive_begin(pr_linestrip);
             draw_vertex_color(slot.bX, slot.bY, col, alpha);
             draw_vertex_color(slot.cX, slot.cY, col, alpha);
@@ -1092,12 +1122,12 @@ function disarm_draw_debug(_arm) {
             draw_vertex_color(slot.aX, slot.aY, col, alpha);
             draw_vertex_color(slot.posX, slot.posY, col, alpha);
             draw_primitive_end();
-            draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
+            //draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
             break;
         case "point":
             var alpha = 1;
             var col = c_orange;
-            var r = 10;
+            var r = 1;
             var x1 = slot.posX;
             var y1 = slot.posY;
             var dir = slot.angle;

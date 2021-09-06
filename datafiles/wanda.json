@@ -1,0 +1,215 @@
+{
+	"frames": {
+		"library/arm-lower.png": {
+			"frame": {
+				"h": 4,
+				"w": 6,
+				"x": 7,
+				"y": 32
+			},
+			"rotated": "true",
+			"sourceSize": {
+				"h": 14,
+				"w": 16
+			},
+			"spriteSourceSize": {
+				"h": 4,
+				"w": 6,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/arm-upper.png": {
+			"frame": {
+				"h": 4,
+				"w": 9,
+				"x": 30,
+				"y": 37
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 14,
+				"w": 19
+			},
+			"spriteSourceSize": {
+				"h": 4,
+				"w": 9,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/body.png": {
+			"frame": {
+				"h": 14,
+				"w": 8,
+				"x": 20,
+				"y": 28
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 24,
+				"w": 18
+			},
+			"spriteSourceSize": {
+				"h": 14,
+				"w": 8,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/foot.png": {
+			"frame": {
+				"h": 4,
+				"w": 7,
+				"x": 1,
+				"y": 32
+			},
+			"rotated": "true",
+			"sourceSize": {
+				"h": 14,
+				"w": 17
+			},
+			"spriteSourceSize": {
+				"h": 4,
+				"w": 7,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/hair.png": {
+			"frame": {
+				"h": 29,
+				"w": 17,
+				"x": 1,
+				"y": 1
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 39,
+				"w": 27
+			},
+			"spriteSourceSize": {
+				"h": 29,
+				"w": 17,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/hand.png": {
+			"frame": {
+				"h": 3,
+				"w": 4,
+				"x": 39,
+				"y": 20
+			},
+			"rotated": "true",
+			"sourceSize": {
+				"h": 13,
+				"w": 14
+			},
+			"spriteSourceSize": {
+				"h": 3,
+				"w": 4,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/head.png": {
+			"frame": {
+				"h": 17,
+				"w": 25,
+				"x": 20,
+				"y": 1
+			},
+			"rotated": "true",
+			"sourceSize": {
+				"h": 27,
+				"w": 35
+			},
+			"spriteSourceSize": {
+				"h": 17,
+				"w": 25,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/shin.png": {
+			"frame": {
+				"h": 8,
+				"w": 3,
+				"x": 39,
+				"y": 1
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 18,
+				"w": 13
+			},
+			"spriteSourceSize": {
+				"h": 8,
+				"w": 3,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/skirt.png": {
+			"frame": {
+				"h": 7,
+				"w": 12,
+				"x": 30,
+				"y": 28
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 17,
+				"w": 22
+			},
+			"spriteSourceSize": {
+				"h": 7,
+				"w": 12,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		},
+		"library/thigh.png": {
+			"frame": {
+				"h": 7,
+				"w": 3,
+				"x": 39,
+				"y": 11
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 17,
+				"w": 13
+			},
+			"spriteSourceSize": {
+				"h": 7,
+				"w": 3,
+				"x": 5,
+				"y": 5
+			},
+			"trimmed": "true"
+		}
+	},
+	"meta": {
+		"app": "Spriter",
+		"format": "RGBA8888",
+		"image": "wanda.png",
+		"scale": 1,
+		"size": {
+			"h": 43,
+			"w": 43
+		},
+		"version": "r11"
+	}
+}
