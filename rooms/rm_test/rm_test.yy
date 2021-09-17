@@ -46,8 +46,8 @@
     "PhysicsWorldPixToMetres": 0.1,
   },
   "parent": {
-    "name": "Test",
-    "path": "folders/Test.yy",
+    "name": "disarm",
+    "path": "disarm.yyp",
   },
   "resourceVersion": "1.0",
   "name": "rm_test",
