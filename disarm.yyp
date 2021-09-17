@@ -1,6 +1,6 @@
 {
   "resources": [
-    {"id":{"name":"obj_test","path":"objects/obj_test/obj_test.yy",},"order":1,},
+    {"id":{"name":"obj_disarm_example","path":"objects/obj_disarm_example/obj_disarm_example.yy",},"order":1,},
     {"id":{"name":"scr_disarm","path":"scripts/scr_disarm/scr_disarm.yy",},"order":0,},
     {"id":{"name":"rm_test","path":"rooms/rm_test/rm_test.yy",},"order":0,},
   ],

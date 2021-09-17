@@ -29,7 +29,7 @@
     "path": "folders/Test.yy",
   },
   "resourceVersion": "1.0",
-  "name": "obj_test",
+  "name": "obj_disarm_example",
   "tags": [],
   "resourceType": "GMObject",
 }
