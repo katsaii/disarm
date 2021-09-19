@@ -5,6 +5,7 @@ anim = "Test";
 scale = 1;
 offsetX = room_width / 2;
 offsetY = room_height / 2;
+transform = matrix_build_identity();
 animationBlend = 0;
 animationSpeed = 0.01;
 debugOverlay = false;

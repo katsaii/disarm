@@ -876,19 +876,14 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
 
 /// @desc Updates the world transformation of armature objects.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} [x] The x-offset of the armature.
-/// @param {real} [y] The y-offset of the armature.
-/// @param {real} [xscale] The x-scale of the armature.
-/// @param {real} [yscale] The y-scale of the armature.
-/// @param {real} [angle] The rotation of the armature.
-function disarm_animation_end(_arm, _x=0, _y=0, _xscale=1, _yscale=1, _angle=0) {
+function disarm_animation_end(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slots;
     var skin = entity.activeSkin;
     var folders = _arm.folders;
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
-        __disarm_update_world_transform_using_object_array(info, i, _x, _y, _xscale, _yscale, _angle);
+        __disarm_update_world_transform_using_object_array(info, i);
     }
     for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
         var slot = slots[i];
@@ -909,7 +904,7 @@ function disarm_animation_end(_arm, _x=0, _y=0, _xscale=1, _yscale=1, _angle=0) 
             if (idx_folder == -1 || idx_file == -1) {
                 continue;
             }
-            __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
+            __disarm_update_world_transform(slot, bone_parent);
             var folder = folders[idx_folder];
             var file = folder.files[idx_file];
             var pivot_x, pivot_y;
@@ -950,7 +945,7 @@ function disarm_animation_end(_arm, _x=0, _y=0, _xscale=1, _yscale=1, _angle=0) 
             slot.frameName = file.name;
             break;
         case "point":
-            __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
+            __disarm_update_world_transform(slot, bone_parent);
             break;
         }
     }
@@ -982,12 +977,7 @@ function __disarm_wierd_hack_for_array_clone(_in) {
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
 /// @param {array} info The object array.
 /// @param {real} id The object index.
-/// @param {real} x The x-offset of the armature.
-/// @param {real} y The y-offset of the armature.
-/// @param {real} xscale The x-scale of the armature.
-/// @param {real} yscale The y-scale of the armature.
-/// @param {real} angle The rotation of the armature.
-function __disarm_update_world_transform_using_object_array(_info, _idx, _x, _y, _xscale, _yscale, _angle) {
+function __disarm_update_world_transform_using_object_array(_info, _idx) {
     var slot = _info[_idx];
     switch (slot.type) {
     case "bone":
@@ -996,9 +986,9 @@ function __disarm_update_world_transform_using_object_array(_info, _idx, _x, _y,
             switch (slot.type) {
             case "bone":
                 var idx_parent = slot.boneParent;
-                var bone_parent = idx_parent == -1 ? undefined : __disarm_update_world_transform_using_object_array(
-                        _info, idx_parent, _x, _y, _xscale, _yscale, _angle);
-                __disarm_update_world_transform(slot, bone_parent, _x, _y, _xscale, _yscale, _angle);
+                var bone_parent = idx_parent == -1 ? undefined :
+                        __disarm_update_world_transform_using_object_array(_info, idx_parent);
+                __disarm_update_world_transform(slot, bone_parent);
                 break;
             }
         }
@@ -1010,31 +1000,16 @@ function __disarm_update_world_transform_using_object_array(_info, _idx, _x, _y,
 /// @desc Updates the world transformation of a specific armature object using this array of objects.
 /// @param {struct} child The object to update.
 /// @param {struct} parent The parent to use.
-/// @param {real} x The x-offset of the armature.
-/// @param {real} y The y-offset of the armature.
-/// @param {real} xscale The x-scale of the armature.
-/// @param {real} yscale The y-scale of the armature.
-/// @param {real} angle The rotation of the armature.
-function __disarm_update_world_transform(_child, _bone_parent, _x, _y, _xscale, _yscale, _angle) {
-    var par_x, par_y, par_scale_x, par_scale_y, par_dir, par_alpha;
+function __disarm_update_world_transform(_child, _bone_parent) {
     if (_bone_parent == undefined) {
-        par_x = _x;
-        par_y = _y;
-        par_scale_x = _xscale;
-        par_scale_y = _yscale;
-        par_dir = _angle;
-        par_alpha = 1;
-    } else {
-        par_x = _bone_parent.posX;
-        par_y = _bone_parent.posY;
-        par_scale_x = _bone_parent.scaleX;
-        par_scale_y = _bone_parent.scaleY;
-        par_dir = _bone_parent.angle;
-        par_alpha = _bone_parent.alpha;
-        if (_child.name != "BWaist") {
-            //show_message([_child, _bone_parent]);
-        }
+        return;
     }
+    var par_x = _bone_parent.posX;
+    var par_y = _bone_parent.posY;
+    var par_scale_x = _bone_parent.scaleX;
+    var par_scale_y = _bone_parent.scaleY;
+    var par_dir = _bone_parent.angle;
+    var par_alpha = _bone_parent.alpha;
     var dir = _child.angle;
     if (par_scale_x < 0) {
         // flip direction through y-axis
@@ -1048,40 +1023,25 @@ function __disarm_update_world_transform(_child, _bone_parent, _x, _y, _xscale, 
     _child.scaleX *= par_scale_x;
     _child.scaleY *= par_scale_y;
     _child.alpha *= par_alpha;
-    var fk = __disarm_apply_forward_kinematics(_child.posX * par_scale_x, _child.posY * par_scale_y, par_dir);
-    _child.posX = par_x + fk[0];
-    _child.posY = par_y + fk[1];
-}
-
-/// @desc Applies forward kinematics and returns a new point.
-/// @param {real} x The x position to rotate.
-/// @param {real} y The y position to rotate.
-/// @param {real} angle The angle to rotate about.
-function __disarm_apply_forward_kinematics(_x, _y, _angle) {
-    return [
-        lengthdir_x(_x, _angle) + lengthdir_x(_y, _angle - 90),
-        lengthdir_y(_x, _angle) + lengthdir_y(_y, _angle - 90)
-    ];
+    var fk_x = _child.posX * par_scale_x;
+    var fk_y = _child.posY * par_scale_y;
+    var fk_angle = par_dir;
+    _child.posX = par_x + lengthdir_x(fk_x, fk_angle) + lengthdir_x(fk_y, fk_angle - 90);
+    _child.posY = par_y + lengthdir_y(fk_x, fk_angle) + lengthdir_y(fk_y, fk_angle - 90);
 }
 
 /// @desc Renders a debug view of the armature.
 /// @param {struct} arm The Disarm instance to render.
-function disarm_draw_debug(_arm) {
+/// @param {array} [transform] The transformation matrix to use.
+function disarm_draw_debug(_arm, _transform=matrix_build_identity()) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slotsDrawOrder;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
+    var default_matrix = matrix_get(matrix_world);
+    matrix_set(matrix_world, matrix_multiply(default_matrix, _transform));
     draw_set_alpha(1);
-    var update = false;
-    if (keyboard_check_pressed(vk_right)) {
-        update = true;
-        if (variable_global_exists("c")) {
-            global.c += 1;
-        } else {
-            global.c = 0;
-        }
-    }
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         var slot = info[i];
         if not (slot.active) {
@@ -1097,12 +1057,6 @@ function disarm_draw_debug(_arm) {
             var x2 = x1 + lengthdir_x(len, dir);
             var y2 = y1 + lengthdir_y(len, dir);
             draw_set_colour(slot.invalidWorldTransform ? c_red : c_yellow);
-            if (variable_global_exists("c") && global.c % array_length(info) == i) {
-                draw_set_colour(c_orange);
-                if (update) {
-                    show_debug_message(slot);
-                }
-            }
             draw_arrow(x1, y1, x2, y2, wid);
             break;
         }
@@ -1141,6 +1095,7 @@ function disarm_draw_debug(_arm) {
     }
     draw_set_colour(default_colour);
     draw_set_alpha(default_alpha);
+    matrix_set(matrix_world, default_matrix);
 }
 
 /// @desc Renders a debug view of the armature atlas.
@@ -1201,7 +1156,7 @@ function disarm_draw_debug_atlas(_arm, _name, _x, _y, _width=undefined, _height=
 function __disarm_get_full_fat_vertex_format() {
     static format = (function() {
         vertex_format_begin();
-        vertex_format_add_position();
+        vertex_format_add_position_3d();
         vertex_format_add_colour();
         vertex_format_add_texcoord();
         return vertex_format_end();
@@ -1246,7 +1201,10 @@ function disarm_mesh_end(_mesh) {
 }
 
 /// @desc Adds the current world transform of an armature to this mesh.
-function disarm_mesh_add_armature(_mesh, _arm) {
+/// @param {struct} mesh The mesh to add vertices to.
+/// @param {struct} arm The armature to get vertices from.
+/// @param {array} [transform] The transformation matrix to use.
+function disarm_mesh_add_armature(_mesh, _arm, _transform=matrix_build_identity()) {
     var entity = _arm.entities[_arm.currentEntity];
     var atlases = _arm.atlases;
     var slots = entity.slotsDrawOrder;
@@ -1281,14 +1239,10 @@ function disarm_mesh_add_armature(_mesh, _arm) {
             var vbuff = batches[_mesh.batchCount].vbuff;
             var colour = c_white;
             var alpha = slot.alpha;
-            var a_x = slot.aX;
-            var a_y = slot.aY;
-            var b_x = slot.bX;
-            var b_y = slot.bY;
-            var c_x = slot.cX;
-            var c_y = slot.cY;
-            var d_x = slot.dX;
-            var d_y = slot.dY;
+            var a = matrix_transform_vertex(_transform, slot.aX, slot.aY, 0);
+            var b = matrix_transform_vertex(_transform, slot.bX, slot.bY, 0);
+            var c = matrix_transform_vertex(_transform, slot.cX, slot.cY, 0);
+            var d = matrix_transform_vertex(_transform, slot.dX, slot.dY, 0);
             var a_u = lerp(uv_left, uv_right, frame.aU);
             var a_v = lerp(uv_top, uv_bottom, frame.aV);
             var b_u = lerp(uv_left, uv_right, frame.bU);
@@ -1297,22 +1251,22 @@ function disarm_mesh_add_armature(_mesh, _arm) {
             var c_v = lerp(uv_top, uv_bottom, frame.cV);
             var d_u = lerp(uv_left, uv_right, frame.dU);
             var d_v = lerp(uv_top, uv_bottom, frame.dV);
-            vertex_position(vbuff, a_x, a_y);
+            vertex_position_3d(vbuff, a[0], a[1], a[2]);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, a_u, a_v);
-            vertex_position(vbuff, b_x, b_y);
+            vertex_position_3d(vbuff, b[0], b[1], b[2]);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, b_u, b_v);
-            vertex_position(vbuff, d_x, d_y);
+            vertex_position_3d(vbuff, d[0], d[1], d[2]);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, d_u, d_v);
-            vertex_position(vbuff, d_x, d_y);
+            vertex_position_3d(vbuff, d[0], d[1], d[2]);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, d_u, d_v);
-            vertex_position(vbuff, b_x, b_y);
+            vertex_position_3d(vbuff, b[0], b[1], b[2]);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, b_u, b_v);
-            vertex_position(vbuff, c_x, c_y);
+            vertex_position_3d(vbuff, c[0], c[1], c[2]);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, c_u, c_v);
             break;

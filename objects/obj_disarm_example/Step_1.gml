@@ -14,3 +14,4 @@ if (keyboard_check_pressed(ord("D"))) {
 if (keyboard_check_pressed(ord("B"))) {
     boneOverlay = !boneOverlay;
 }
+transform = matrix_build(offsetX, offsetY, 0, 0, 0, 0, scale, scale, scale);

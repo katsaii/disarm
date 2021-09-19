@@ -5,7 +5,7 @@ if (animationBlend > 1 || animationBlend < 0) {
 }
 disarm_animation_begin(arm);
 disarm_animation_add(arm, anim, animationBlend);
-disarm_animation_end(arm, offsetX, offsetY, scale, scale);
+disarm_animation_end(arm);
 disarm_mesh_begin(mesh);
-disarm_mesh_add_armature(mesh, arm);
+disarm_mesh_add_armature(mesh, arm, transform);
 disarm_mesh_end(mesh);
