@@ -8,5 +8,4 @@ offsetY = room_height / 2;
 animationBlend = 0;
 animationSpeed = 0.01;
 debugOverlay = false;
-//show_debug_overlay(true);
-//disarm_skin_add(arm, "Test Map");
+boneOverlay = false;

@@ -5,6 +5,7 @@ var text = [
     ["Y", offsetY, "up and down"],
     ["Scale", scale, "scroll or page up and page down"],
     ["Debug overlay", bool_to_string(debugOverlay), "D"],
+    ["Bone overlay", bool_to_string(boneOverlay), "B"],
 ];
 var n = array_length(text);
 var pad = 20;

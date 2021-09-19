@@ -11,3 +11,6 @@ if (keyboard_check_pressed(ord("D"))) {
     debugOverlay = !debugOverlay;
     show_debug_overlay(debugOverlay);
 }
+if (keyboard_check_pressed(ord("B"))) {
+    boneOverlay = !boneOverlay;
+}
