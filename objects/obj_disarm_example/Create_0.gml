@@ -10,3 +10,4 @@ animationBlend = 0;
 animationSpeed = 0.01;
 debugOverlay = false;
 boneOverlay = false;
+iterations = 1;

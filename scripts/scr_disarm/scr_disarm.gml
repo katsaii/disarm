@@ -1156,7 +1156,7 @@ function disarm_draw_debug_atlas(_arm, _name, _x, _y, _width=undefined, _height=
 function __disarm_get_full_fat_vertex_format() {
     static format = (function() {
         vertex_format_begin();
-        vertex_format_add_position_3d();
+        vertex_format_add_position();
         vertex_format_add_colour();
         vertex_format_add_texcoord();
         return vertex_format_end();
@@ -1243,6 +1243,14 @@ function disarm_mesh_add_armature(_mesh, _arm, _transform=matrix_build_identity(
             var b = matrix_transform_vertex(_transform, slot.bX, slot.bY, 0);
             var c = matrix_transform_vertex(_transform, slot.cX, slot.cY, 0);
             var d = matrix_transform_vertex(_transform, slot.dX, slot.dY, 0);
+            var a_x = a[0];
+            var a_y = a[1];
+            var b_x = b[0];
+            var b_y = b[1];
+            var c_x = c[0];
+            var c_y = c[1];
+            var d_x = d[0];
+            var d_y = d[1];
             var a_u = lerp(uv_left, uv_right, frame.aU);
             var a_v = lerp(uv_top, uv_bottom, frame.aV);
             var b_u = lerp(uv_left, uv_right, frame.bU);
@@ -1251,22 +1259,22 @@ function disarm_mesh_add_armature(_mesh, _arm, _transform=matrix_build_identity(
             var c_v = lerp(uv_top, uv_bottom, frame.cV);
             var d_u = lerp(uv_left, uv_right, frame.dU);
             var d_v = lerp(uv_top, uv_bottom, frame.dV);
-            vertex_position_3d(vbuff, a[0], a[1], a[2]);
+            vertex_position(vbuff, a_x, a_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, a_u, a_v);
-            vertex_position_3d(vbuff, b[0], b[1], b[2]);
+            vertex_position(vbuff, b_x, b_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, b_u, b_v);
-            vertex_position_3d(vbuff, d[0], d[1], d[2]);
+            vertex_position(vbuff, d_x, d_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, d_u, d_v);
-            vertex_position_3d(vbuff, d[0], d[1], d[2]);
+            vertex_position(vbuff, d_x, d_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, d_u, d_v);
-            vertex_position_3d(vbuff, b[0], b[1], b[2]);
+            vertex_position(vbuff, b_x, b_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, b_u, b_v);
-            vertex_position_3d(vbuff, c[0], c[1], c[2]);
+            vertex_position(vbuff, c_x, c_y);
             vertex_colour(vbuff, colour, alpha);
             vertex_texcoord(vbuff, c_u, c_v);
             break;
