@@ -1032,15 +1032,19 @@ function __disarm_update_world_transform(_child, _bone_parent) {
 
 /// @desc Renders a debug view of the armature.
 /// @param {struct} arm The Disarm instance to render.
-/// @param {array} [transform] The transformation matrix to use.
-function disarm_draw_debug(_arm, _transform=matrix_build_identity()) {
+/// @param {real} [x] The X offset to render the armature at.
+/// @param {real} [y] The Y offset to render the armature at.
+/// @param {real} [xscale] The X scale to render the armature at.
+/// @param {real} [yscale] The Y scale to render the armature at.
+function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=1) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slotsDrawOrder;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
     var default_matrix = matrix_get(matrix_world);
-    matrix_set(matrix_world, matrix_multiply(default_matrix, _transform));
+    matrix_set(matrix_world, matrix_multiply(default_matrix,
+            matrix_build(_offset_x, _offset_y, 0, 0, 0, 0, _scale_x, _scale_y, 1)));
     draw_set_alpha(1);
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         var slot = info[i];
@@ -1203,8 +1207,11 @@ function disarm_mesh_end(_mesh) {
 /// @desc Adds the current world transform of an armature to this mesh.
 /// @param {struct} mesh The mesh to add vertices to.
 /// @param {struct} arm The armature to get vertices from.
-/// @param {array} [transform] The transformation matrix to use.
-function disarm_mesh_add_armature(_mesh, _arm, _transform=matrix_build_identity()) {
+/// @param {real} [x] The X offset to render the armature at.
+/// @param {real} [y] The Y offset to render the armature at.
+/// @param {real} [xscale] The X scale to render the armature at.
+/// @param {real} [yscale] The Y scale to render the armature at.
+function disarm_mesh_add_armature(_mesh, _arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=1) {
     var entity = _arm.entities[_arm.currentEntity];
     var atlases = _arm.atlases;
     var slots = entity.slotsDrawOrder;
@@ -1239,18 +1246,14 @@ function disarm_mesh_add_armature(_mesh, _arm, _transform=matrix_build_identity(
             var vbuff = batches[_mesh.batchCount].vbuff;
             var colour = c_white;
             var alpha = slot.alpha;
-            var a = matrix_transform_vertex(_transform, slot.aX, slot.aY, 0);
-            var b = matrix_transform_vertex(_transform, slot.bX, slot.bY, 0);
-            var c = matrix_transform_vertex(_transform, slot.cX, slot.cY, 0);
-            var d = matrix_transform_vertex(_transform, slot.dX, slot.dY, 0);
-            var a_x = a[0];
-            var a_y = a[1];
-            var b_x = b[0];
-            var b_y = b[1];
-            var c_x = c[0];
-            var c_y = c[1];
-            var d_x = d[0];
-            var d_y = d[1];
+            var a_x = _offset_x + _scale_x * slot.aX;
+            var a_y = _offset_y + _scale_y * slot.aY;
+            var b_x = _offset_x + _scale_x * slot.bX;
+            var b_y = _offset_y + _scale_y * slot.bY;
+            var c_x = _offset_x + _scale_x * slot.cX;
+            var c_y = _offset_y + _scale_y * slot.cY;
+            var d_x = _offset_x + _scale_x * slot.dX;
+            var d_y = _offset_y + _scale_y * slot.dY;
             var a_u = lerp(uv_left, uv_right, frame.aU);
             var a_v = lerp(uv_top, uv_bottom, frame.aV);
             var b_u = lerp(uv_left, uv_right, frame.bU);
