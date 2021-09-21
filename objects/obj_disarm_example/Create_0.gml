@@ -1,5 +1,5 @@
 path = "wanda.scon";
-arm = disarm_import(disarm_env_file(path));
+arm = disarm_import(path);
 mesh = disarm_mesh_create();
 anim = "Test";
 scale = 1;

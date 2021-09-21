@@ -91,7 +91,7 @@ function disarm_flush() {
 /// @param {struct} arm The struct containing armature data.
 /// @param {struct} [atlas_map] A map from atlas names to atlas data.
 /// @param {struct} [image_map] A map from image names to image data.
-function disarm_env_internal(_arm, _atlas_map={ }, _image_map={ }) {
+function disarm_importer_raw(_arm, _atlas_map={ }, _image_map={ }) {
     return {
         armature : method({
             arm : _arm,
@@ -115,7 +115,7 @@ function disarm_env_internal(_arm, _atlas_map={ }, _image_map={ }) {
 /// @desc Creates a set of events for loading Spriter armatures from the physical file system.
 /// @param {string} path The file path of the skeleton file.
 /// @param {struct} [image_map] A map from image names to image data.
-function disarm_env_file(_path, _image_map={ }) {
+function disarm_importer_file(_path, _image_map={ }) {
     var get_path = method({
         dirname : filename_dir(_path),
     }, function(_name) {
@@ -139,8 +139,11 @@ function disarm_env_file(_path, _image_map={ }) {
 }
 
 /// @desc Reads the contents of a file and attempts to build a new Disarm instance from the contents.
-/// @param {struct} events A struct containing the fields `armature`, `atlas` and `image`, representing events the disarm importer will call.
+/// @param {value} path_or_events_struct A struct containing the fields `armature`, `atlas` and `image`, representing events the disarm importer will call.
 function disarm_import(_events) {
+    if (is_string(_events)) {
+        _events = disarm_importer_file(_events);
+    }
     static aux_text = function(_x) {
         if (is_string(_x)) {
             return json_parse(file_exists(_x) ? __disarm_read_whole_text_file_from_path(_x) : _x);
