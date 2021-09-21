@@ -308,11 +308,13 @@ function __disarm_import_entity(_struct) {
                 __disarm_import_entity_object),
         slots : [],
         slotsDrawOrder : [],
+        slotCount : 0,
         slotTable : { },
         anims : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "animation"),
                 __disarm_import_entity_animation),
         animTable : { },
+        animStep : 0,
         skins : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "character_map"),
                 __disarm_import_entity_character_map),
@@ -608,61 +610,57 @@ function __disarm_animation_calculate_animation_interpolation_between_keyframes(
 /// @param {string} type The type of slot.
 /// @param {struct} table The table of slots to look-up.
 /// @param {array} array The array to insert a new slot into if one doesn't exist.
-function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_table, _slots) {
-    if (variable_struct_exists(_slot_table, _name)) {
-        return _slot_table[$ _name];
-    } else {
-        var slot;
-        switch (_type) {
-        case "sprite":
-            slot = {
-                folder : -1,
-                file : -1,
-                posX : 0,
-                posY : 0,
-                angle : 0,
-                scaleX : 1,
-                scaleY : 1,
-                useDefaultPivot : true,
-                pivotX : 0,
-                pivotY : 1,
-                alpha : 1,
-                aX : 0, bX : 0, cX : 0, dX : 0,
-                aY : 0, bY : 0, cY : 0, dY : 0,
-                idxAtlas : -1,
-                frameName : "",
-            };
-            break;
-        case "point":
-            slot = {
-                posX : 0,
-                posY : 0,
-                angle : 0,
-                scaleX : 1,
-                scaleY : 1,
-                alpha : 1,
-            };
-            break;
-        default:
-            slot = { };
-            break;
+/// @param {real} anim_step The animation step variable to check a slot for.
+/// @param {struct} entity The entity to update.
+function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_table, _slots, _anim_step, _entity) {
+    var slot_data = _slot_table[$ _name];
+    if (slot_data != undefined) {
+        if (slot_data[0] == _anim_step) {
+            return slot_data[1];
         }
-        slot[$ "name"] = _name;
-        slot[$ "type"] = _type;
-        slot[$ "boneParent"] = -1;
-        slot[$ "zIndex"] = 0;
-        _slot_table[$ _name] = slot;
-        array_push(_slots, slot);
-        return slot;
+    } else {
+        slot_data = array_create(2); // slot_data[0] holds the anim_step, slot_data[1] holds the actual slot
+        _slot_table[$ _name] = slot_data;
+        slot_data[@ 1] = {
+            folder : -1,
+            file : -1,
+            posX : 0,
+            posY : 0,
+            angle : 0,
+            scaleX : 1,
+            scaleY : 1,
+            useDefaultPivot : true,
+            pivotX : 0,
+            pivotY : 1,
+            alpha : 1,
+            aX : 0, bX : 0, cX : 0, dX : 0,
+            aY : 0, bY : 0, cY : 0, dY : 0,
+            idxAtlas : -1,
+            frameName : "",
+            name : _name,
+            type : _type,
+            boneParent : -1,
+            zIndex : 0,
+        };
     }
+    slot_data[@ 0] = _anim_step;
+    var slot = slot_data[1];
+    var i = _entity.slotCount;
+    _entity.slotCount += 1;
+    if (i < array_length(_slots)) {
+        _slots[@ i] = slot;
+    } else {
+        array_push(_slots, slot);
+    }
+    return slot;
 }
 
 /// @desc Resets the state of armature objects.
 /// @param {struct} arm The Disarm instance to update.
 function disarm_animation_begin(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
-    entity.slots = [];
-    entity.slotTable = { };
+    entity.slotCount = 0;
+    entity.animStep += 1;
     var info = entity.info;
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         var slot = info[i];
@@ -692,6 +690,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
     var info = entity.info;
     var slots = entity.slots;
     var slot_table = entity.slotTable;
+    var anim_step = entity.animStep;
     var anim = entity.anims[entity.animTable[$ _anim]];
     var mainline = anim.mainline;
     var timelines = anim.timelines;
@@ -772,7 +771,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
         var idx_key = slot_ref.key;
         var key = keys[idx_key];
         var key_next = idx_key + 1 < array_length(keys) ? keys[idx_key + 1] : (looping ? keys[0] : undefined);
-        var slot = __disarm_animation_get_slot_by_name_or_spawn_new(timeline.name, type, slot_table, slots);
+        var slot = __disarm_animation_get_slot_by_name_or_spawn_new(timeline.name, type, slot_table, slots, anim_step, entity);
         switch (type) {
         case "sprite":
             // get interpolation
