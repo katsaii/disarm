@@ -514,14 +514,15 @@ function __disarm_import_entity_character_map(_struct) {
 
 /// @desc Returns whether an entity exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} entity The name of the entity to check.
+/// @param {real} entity The name or id of the entity to check.
 function disarm_entity_exists(_arm, _entity) {
-    return variable_struct_exists(_arm.entityTable, string(_entity));
+    var pos = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
+    return __disarm_check_index_in_array(_arm.entities, pos);
 }
 
 /// @desc Adds an animation to the armature pose.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} entity The name of the entity to set.
+/// @param {real} entity The name or id of the entity to set.
 function disarm_entity_set(_arm, _entity) {
     _arm.currentEntity = _arm.entityTable[$ _entity];
 }
@@ -1472,6 +1473,20 @@ function __disarm_find_struct_with_name_in_array(_values, _expected_name) {
         }
     }
     return -1;
+}
+
+/// @desc Returns the index of a value by name if it is a string.
+/// @param {struct} names The struct to check.
+/// @param {value} name_or_index The name to search for.
+function __disarm_get_index_id_or_name(_names, _idx) {
+    return is_numeric(_idx) ? _idx : _names[$ string(_idx)];
+}
+
+/// @desc Returns whether an index is in the bounds of an array.
+/// @param {array} arr The array to check.
+/// @param {value} pos The position to check.
+function __disarm_check_index_in_array(_arr, _pos) {
+    return is_numeric(_pos) && _pos >= 0 && _pos < array_length(_arr);
 }
 
 /// @desc Performs a binary search and returns the ID of the first structure where the `time` field
