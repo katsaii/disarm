@@ -636,33 +636,39 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
         if (slot_data[0] == _anim_step) {
             return slot_data[1];
         }
+        
     } else {
         slot_data = array_create(2); // slot_data[0] holds the anim_step, slot_data[1] holds the actual slot
         _slot_table[$ _name] = slot_data;
-        slot_data[@ 1] = {
-            folder : -1,
-            file : -1,
-            posX : 0,
-            posY : 0,
-            angle : 0,
-            scaleX : 1,
-            scaleY : 1,
-            useDefaultPivot : true,
-            pivotX : 0,
-            pivotY : 1,
-            alpha : 1,
-            aX : 0, bX : 0, cX : 0, dX : 0,
-            aY : 0, bY : 0, cY : 0, dY : 0,
-            idxAtlas : -1,
-            frameName : "",
-            name : _name,
-            type : _type,
-            boneParent : -1,
-            zIndex : 0,
-        };
+        slot_data[@ 1] = { };
     }
     slot_data[@ 0] = _anim_step;
     var slot = slot_data[1];
+    slot.folder = -1;
+    slot.file = -1;
+    slot.posX = 0;
+    slot.posY = 0;
+    slot.angle = 0;
+    slot.scaleX = 1;
+    slot.scaleY = 1;
+    slot.useDefaultPivot = true;
+    slot.pivotX = 0;
+    slot.pivotY = 1;
+    slot.alpha = 1;
+    slot.aX = 0;
+    slot.bX = 0;
+    slot.cX = 0;
+    slot.dX = 0;
+    slot.aY = 0;
+    slot.bY = 0;
+    slot.cY = 0;
+    slot.dY = 0;
+    slot.idxAtlas = -1;
+    slot.frameName = "";
+    slot.name = _name;
+    slot.type = _type;
+    slot.boneParent = -1;
+    slot.zIndex = 0;
     var i = _entity.slotCount;
     _entity.slotCount += 1;
     if (i < array_length(_slots)) {
@@ -897,12 +903,13 @@ function disarm_animation_end(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slots;
+    var slot_count = entity.slotCount;
     var skin = entity.activeSkin;
     var folders = _arm.folders;
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(info, i);
     }
-    for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
+    for (var i = slot_count - 1; i >= 0; i -= 1) {
         var slot = slots[i];
         var idx_parent = slot.boneParent;
         var bone_parent = idx_parent == -1 ? undefined : info[idx_parent];
@@ -966,8 +973,9 @@ function disarm_animation_end(_arm) {
             break;
         }
     }
-    var draw_order = __disarm_wierd_hack_for_array_clone(slots);
-    entity.slotsDrawOrder = draw_order;
+    var draw_order = entity.slotsDrawOrder;
+    array_resize(draw_order, slot_count);
+    array_copy(draw_order, 0, slots, 0, slot_count);
     array_sort(draw_order, function(_a, _b) {
         var a_z = _a.zIndex;
         var b_z = _b.zIndex;
@@ -1082,7 +1090,7 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
             break;
         }
     }
-    for (var i = array_length(slots) - 1; i >= 0; i -= 1) {
+    for (var i = entity.slotCount - 1; i >= 0; i -= 1) {
         var slot = slots[i];
         switch (slot.type) {
         case "sprite":
@@ -1232,7 +1240,7 @@ function disarm_mesh_add_armature(_mesh, _arm, _offset_x=0, _offset_y=0, _scale_
     var entity = _arm.entities[_arm.currentEntity];
     var atlases = _arm.atlases;
     var slots = entity.slotsDrawOrder;
-    var slot_count = array_length(slots);
+    var slot_count = entity.slotCount;
     var page = _mesh.currentPage;
     var batches = _mesh.batches;
     for (var i = 0; i < slot_count; i += 1) {
