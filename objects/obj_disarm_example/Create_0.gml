@@ -1,10 +1,9 @@
-path = "wanda.scon";
-arm = disarm_import(path);
+path = get_string("type the name of the armature to load\n(either 'wanda', 'platformer' or 'armature')", "wanda");
+arm = disarm_import(path + ".scon");
 mesh = disarm_mesh_create();
 scale = 1;
 offsetX = room_width / 2;
 offsetY = room_height / 2;
-transform = matrix_build_identity();
 animationBlend = 0;
 animationSpeed = 0.01;
 debugOverlay = false;
