@@ -17,3 +17,33 @@ if (keyboard_check_pressed(ord("D"))) {
 if (keyboard_check_pressed(ord("B"))) {
     boneOverlay = !boneOverlay;
 }
+if (keyboard_check_pressed(ord("1"))) {
+    animationIdx = 0;
+}
+if (keyboard_check_pressed(ord("2"))) {
+    animationIdx = 1;
+}
+if (keyboard_check_pressed(ord("3"))) {
+    animationIdx = 2;
+}
+if (keyboard_check_pressed(ord("4"))) {
+    animationIdx = 3;
+}
+if (keyboard_check_pressed(ord("5"))) {
+    animationIdx = 4;
+}
+if (keyboard_check_pressed(ord("6"))) {
+    animationIdx = 5;
+}
+if (keyboard_check_pressed(ord("7"))) {
+    animationIdx = 6;
+}
+if (keyboard_check_pressed(ord("8"))) {
+    animationIdx = 7;
+}
+if (keyboard_check_pressed(ord("9"))) {
+    animationIdx = 8;
+}
+if (keyboard_check_pressed(ord("0"))) {
+    animationIdx = 9;
+}

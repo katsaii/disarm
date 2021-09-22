@@ -1,7 +1,6 @@
 path = "wanda.scon";
 arm = disarm_import(path);
 mesh = disarm_mesh_create();
-anim = "Test";
 scale = 1;
 offsetX = room_width / 2;
 offsetY = room_height / 2;
@@ -11,3 +10,4 @@ animationSpeed = 0.01;
 debugOverlay = false;
 boneOverlay = false;
 iterations = 1;
+animationIdx = 0;
