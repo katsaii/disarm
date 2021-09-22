@@ -514,7 +514,7 @@ function __disarm_import_entity_character_map(_struct) {
 
 /// @desc Returns whether an entity exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} entity The name or id of the entity to check.
+/// @param {real} entity The name of the entity to check.
 function disarm_entity_exists(_arm, _entity) {
     var pos = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
     return __disarm_check_index_in_array(_arm.entities, pos);
@@ -522,9 +522,9 @@ function disarm_entity_exists(_arm, _entity) {
 
 /// @desc Adds an animation to the armature pose.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} entity The name or id of the entity to set.
+/// @param {real} entity The name of the entity to set.
 function disarm_entity_set(_arm, _entity) {
-    _arm.currentEntity = _arm.entityTable[$ _entity];
+    _arm.currentEntity = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
 }
 
 /// @desc Clears the current character map state.
@@ -539,7 +539,8 @@ function disarm_skin_clear(_arm) {
 /// @param {real} skin The name of the skin to check.
 function disarm_skin_exists(_arm, _skin) {
     var entity = _arm.entities[_arm.currentEntity];
-    return variable_struct_exists(entity.skinTable, string(_skin));
+    var pos = __disarm_get_index_id_or_name(entity.skinTable, _skin);
+    return __disarm_check_index_in_array(entity.skins, pos);
 }
 
 /// @desc Adds a new character map, or array of character maps, or the current active skin.
@@ -554,7 +555,8 @@ function disarm_skin_add(_arm, _skin_names) {
     var count = array_length(_skin_names);
     for (var i = 0; i < count; i += 1) {
         var skin_name = _skin_names[i];
-        var maps = entity.skins[entity.skinTable[$ skin_name]].maps;
+        var pos = __disarm_get_index_id_or_name(entity.skinTable, skin_name);
+        var maps = entity.skins[pos].maps;
         for (var j = array_length(maps) - 1; j >= 0; j -= 1) {
             var map = maps[j];
             var folder = string(map.sourceFolder);
@@ -571,7 +573,7 @@ function disarm_skin_add(_arm, _skin_names) {
 /// @param {real} slot The name of the slot to check.
 function disarm_slot_exists(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
-    return variable_struct_exists(entity.slotTable, string(_slot));
+    return variable_struct_exists(entity.slotTable, _slot);
 }
 
 /// @desc Returns a reference to the slot data with this name. Note: any changes made to this
@@ -587,7 +589,9 @@ function disarm_slot_get_data(_arm, _slot) {
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} anim The name of the animation to check.
 function disarm_animation_exists(_arm, _anim) {
-    return variable_struct_exists(_arm.entities[_arm.currentEntity].animTable, string(_anim));
+    var entity = _arm.entities[_arm.currentEntity];
+    var pos = __disarm_get_index_id_or_name(entity.animTable, _anim);
+    return __disarm_check_index_in_array(entity.anims, pos);
 }
 
 /// @desc Returns the linear interpolation of two keyframe times.
@@ -695,7 +699,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
     var slots = entity.slots;
     var slot_table = entity.slotTable;
     var anim_step = entity.animStep;
-    var anim = entity.anims[entity.animTable[$ _anim]];
+    var anim = entity.anims[__disarm_get_index_id_or_name(entity.animTable, _anim)];
     var mainline = anim.mainline;
     var timelines = anim.timelines;
     var looping = anim.looping;
