@@ -512,6 +512,14 @@ function __disarm_import_entity_character_map(_struct) {
     };
 }
 
+/// @desc Returns whether an atlas exists with this name.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} anim The name of the atlas to check.
+function disarm_atlas_exists(_arm, _atlas) {
+    var pos = __disarm_get_index_id_or_name(_arm.atlasTable, _atlas);
+    return __disarm_check_index_in_array(_arm.atlases, pos);
+}
+
 /// @desc Returns whether an entity exists with this name.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} entity The name of the entity to check.
@@ -527,13 +535,6 @@ function disarm_entity_set(_arm, _entity) {
     _arm.currentEntity = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
 }
 
-/// @desc Clears the current character map state.
-/// @param {struct} arm The Disarm instance to update.
-function disarm_skin_clear(_arm) {
-    var entity = _arm.entities[_arm.currentEntity];
-    entity.activeSkin = { };
-}
-
 /// @desc Returns whether a character map exists with this name.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} skin The name of the skin to check.
@@ -541,6 +542,13 @@ function disarm_skin_exists(_arm, _skin) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.skinTable, _skin);
     return __disarm_check_index_in_array(entity.skins, pos);
+}
+
+/// @desc Clears the current character map state.
+/// @param {struct} arm The Disarm instance to update.
+function disarm_skin_clear(_arm) {
+    var entity = _arm.entities[_arm.currentEntity];
+    entity.activeSkin = { };
 }
 
 /// @desc Adds a new character map, or array of character maps, or the current active skin.
@@ -573,7 +581,9 @@ function disarm_skin_add(_arm, _skin_names) {
 /// @param {real} slot The name of the slot to check.
 function disarm_slot_exists(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
-    return variable_struct_exists(entity.slotTable, _slot);
+    return is_numeric(_slot) ?
+            __disarm_check_index_in_array(entity.slots, _slot) :
+            variable_struct_exists(entity.slotTable, string(_slot));
 }
 
 /// @desc Returns a reference to the slot data with this name. Note: any changes made to this
@@ -582,7 +592,7 @@ function disarm_slot_exists(_arm, _slot) {
 /// @param {real} slot The name of the slot to check.
 function disarm_slot_get_data(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
-    return entity.slotTable[$ _slot];
+    return is_numeric(_slot) ? entity.slots[_slot] : entity.slotTable[$ string(_slot)][1];
 }
 
 /// @desc Returns whether an animation exists with this name.
@@ -1116,8 +1126,8 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
 /// @param {real} y The y position to render the atlas debug window.
 /// @param {real} [width] The width of the debug window.
 /// @param {real} [height] The height of the debug window.
-function disarm_draw_debug_atlas(_arm, _name, _x, _y, _width=undefined, _height=undefined) {
-    var atlas = _arm.atlases[_arm.atlasTable[$ _name]];
+function disarm_draw_debug_atlas(_arm, _atlas, _x, _y, _width=undefined, _height=undefined) {
+    var atlas = _arm.atlases[__disarm_get_index_id_or_name(_arm.atlasTable, _atlas)];
     var width = _width == undefined ? atlas.width : _width;
     var height = _height == undefined ? atlas.height : _height;
     var sprite_data = atlas.image;
