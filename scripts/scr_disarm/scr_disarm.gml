@@ -1518,7 +1518,7 @@ function __disarm_find_struct_with_name_in_array(_values, _expected_name) {
     return -1;
 }
 
-/// @desc Returns the index of a value by name if it is a string.
+/// @desc Returns the index of a value by name if it is a string, or simply passes through if it is a number.
 /// @param {struct} names The struct to check.
 /// @param {value} name_or_index The name to search for.
 function __disarm_get_index_id_or_name(_names, _idx) {
@@ -1537,14 +1537,29 @@ function __disarm_check_index_in_array(_arr, _pos) {
 /// @param {array} values The array of structs to search.
 /// @param {string} time The time to search for.
 function __disarm_find_struct_with_time_in_array(_values, _expected_time) {
+    static previous_id = -1;
     var n = array_length(_values);
     var l = 0;
     var r = n - 1;
+    if (previous_id != -1) {
+        // a minor temporal optimisation
+        var t_start = _values[previous_id].time;
+        if (_expected_time >= t_start &&
+                _expected_time < (previous_id + 1 < n ? _values[previous_id + 1].time : infinity)) {
+            return previous_id;
+        }
+        if (_expected_time < t_start) {
+            r = previous_id - 1;
+        } else {
+            l = previous_id + 1;
+        }
+    }
     while (r >= l) {
         var mid = (l + r) div 2;
         var t_start = _values[mid].time;
-        var t_end = mid + 1 < n ? _values[mid + 1].time : infinity;
-        if (_expected_time >= t_start && _expected_time < t_end) {
+        if (_expected_time >= t_start &&
+                _expected_time < (mid + 1 < n ? _values[mid + 1].time : infinity)) {
+            previous_id = mid;
             return mid;
         }
         if (_expected_time < t_start) {
@@ -1553,6 +1568,7 @@ function __disarm_find_struct_with_time_in_array(_values, _expected_time) {
             l = mid + 1;
         }
     }
+    previous_id = -1;
     return -1;
 }
 
