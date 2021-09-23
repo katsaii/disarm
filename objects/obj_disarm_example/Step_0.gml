@@ -1,5 +1,10 @@
 /// @desc Update mesh.
 animationBlend += animationSpeed;
+if (mouse_check_button(mb_left)) {
+     // using the mouse position for the animation time,
+     // not required, but used to view the animation at a specific point
+     animationBlend = mouse_x / room_width;
+}
 if (animationBlend > 1 || animationBlend < 0) {
     animationBlend = ((animationBlend % 1) + 1) % 1;
 }

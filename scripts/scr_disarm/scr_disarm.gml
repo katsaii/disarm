@@ -818,10 +818,10 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
                 angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
                 scale_x = lerp(scale_x, key_next.scaleX, interp);
                 scale_y = lerp(scale_y, key_next.scaleY, interp);
-                if not (pivot_use_default) {
-                    pivot_x = lerp(pivot_x, key_next.pivotX, interp);
-                    pivot_y = lerp(pivot_y, key_next.pivotY, interp);
-                }
+                //if not (pivot_use_default) { // wtf, not actually needed?!
+                //    pivot_x = lerp(pivot_x, key_next.pivotX, interp);
+                //    pivot_y = lerp(pivot_y, key_next.pivotY, interp);
+                //}
                 alpha = lerp(alpha, key_next.alpha, interp);
             }
             // blend between current and new animation
@@ -831,10 +831,10 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
                 angle = __disarm_animation_lerp_angle(slot.angle, angle, 1, _amount);
                 scale_x = lerp(slot.scaleX, scale_x, _amount);
                 scale_y = lerp(slot.scaleY, scale_y, _amount);
-                if not (pivot_use_default) {
-                    pivot_x = lerp(slot.pivotX, pivot_x, _amount);
-                    pivot_y = lerp(slot.pivotY, pivot_y, _amount);
-                }
+                //if not (pivot_use_default) { // wtf
+                //    pivot_x = lerp(slot.pivotX, pivot_x, _amount);
+                //    pivot_y = lerp(slot.pivotY, pivot_y, _amount);
+                //}
                 alpha = lerp(slot.alpha, alpha, _amount);
             }
             // apply transformations
