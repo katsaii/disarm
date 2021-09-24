@@ -4,8 +4,6 @@
  * https://github.com/NuxiiGit/disarm
  */
 
-// TODO: add different interpolation methods
-
 /// @desc Uses a set of events to request information that is used to build a Disarm instance.
 ///       The `events` struct must contain the fields `armature`, `atlas`, and `image`. Each of these
 ///       fields must store a function which will return the struct or the file path of where the data
@@ -1654,7 +1652,7 @@ function __disarm_find_struct_with_time_in_array(_values, _expected_time) {
     var n = array_length(_values);
     var l = 0;
     var r = n - 1;
-    if (previous_id != -1) {
+    if (previous_id >= 0 && previous_id < n) {
         // a minor temporal optimisation
         var t_start = _values[previous_id].time;
         if (_expected_time >= t_start &&
