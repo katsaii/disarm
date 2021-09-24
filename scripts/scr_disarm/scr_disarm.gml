@@ -4,10 +4,7 @@
  * https://github.com/NuxiiGit/disarm
  */
 
-
-//disarm_import
-//disarm_import_ext
-//disarm_import_custom
+// TODO: add different interpolation methods
 
 /// @desc Uses a set of events to request information that is used to build a Disarm instance.
 ///       The `events` struct must contain the fields `armature`, `atlas`, and `image`. Each of these
@@ -114,10 +111,19 @@ function disarm_flush() {
 
 /// @desc Returns whether an atlas exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} anim The name of the atlas to check.
+/// @param {real} atlas The name of the atlas to check.
 function disarm_atlas_exists(_arm, _atlas) {
     var pos = __disarm_get_index_id_or_name(_arm.atlasTable, _atlas);
     return __disarm_check_index_in_array(_arm.atlases, pos);
+}
+
+/// @desc Returns a reference to the atlas data with this name. Note: any changes made to this
+///       struct will affect the representation of the atlas in the animation.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} atlas The name of the atlas to get.
+function disarm_atlas_get_data(_arm, _atlas) {
+    var pos = __disarm_get_index_id_or_name(_arm.atlasTable, _atlas);
+    return _arm.atlases[pos];
 }
 
 /// @desc Returns whether an entity exists with this name.
@@ -126,6 +132,15 @@ function disarm_atlas_exists(_arm, _atlas) {
 function disarm_entity_exists(_arm, _entity) {
     var pos = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
     return __disarm_check_index_in_array(_arm.entities, pos);
+}
+
+/// @desc Returns a reference to the entity data with this name. Note: any changes made to this
+///       struct will affect the representation of the entity in animation.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} entity The name of the entity to get.
+function disarm_entity_get_data(_arm, _entity) {
+    var pos = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
+    return _arm.entities[pos];
 }
 
 /// @desc Sets the entity with this name as the current for this armature.
@@ -142,6 +157,16 @@ function disarm_skin_exists(_arm, _skin) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.skinTable, _skin);
     return __disarm_check_index_in_array(entity.skins, pos);
+}
+
+/// @desc Returns a reference to the skin data with this name. Note: any changes made to this
+///       struct will affect the representation of the skin in animation.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} skin The name of the skin to get.
+function disarm_skin_get_data(_arm, _skin) {
+    var entity = _arm.entities[_arm.currentEntity];
+    var pos = __disarm_get_index_id_or_name(entity.skinTable, _skin);
+    return entity.skins[pos];
 }
 
 /// @desc Clears the current character map state.
@@ -176,6 +201,25 @@ function disarm_skin_add(_arm, _skin_names) {
     }
 }
 
+/// @desc Returns whether an object exists with this name.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} object The name of the slot to object.
+function disarm_object_exists(_arm, _info) {
+    var entity = _arm.entities[_arm.currentEntity];
+    var pos = __disarm_get_index_id_or_name(entity.infoTable, _info);
+    return __disarm_check_index_in_array(entity.info, pos);
+}
+
+/// @desc Returns a reference to the object data with this name. Note: any changes made to this
+///       struct will affect the representation of the object in the animation.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} object The name of the object to get.
+function disarm_object_get_data(_arm, _bone) {
+    var entity = _arm.entities[_arm.currentEntity];
+    var pos = __disarm_get_index_id_or_name(entity.infoTable, _info);
+    return entity.info[pos];
+}
+
 /// @desc Returns whether a slot exists with this name.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} slot The name of the slot to check.
@@ -187,9 +231,9 @@ function disarm_slot_exists(_arm, _slot) {
 }
 
 /// @desc Returns a reference to the slot data with this name. Note: any changes made to this
-///       struct will affect the representation of the slot in the armature.
+///       struct will affect the representation of the slot in the animation.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} slot The name of the slot to check.
+/// @param {real} slot The name of the slot to get.
 function disarm_slot_get_data(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
     return is_numeric(_slot) ? entity.slots[_slot] : entity.slotTable[$ string(_slot)][1];
@@ -202,6 +246,16 @@ function disarm_animation_exists(_arm, _anim) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.animTable, _anim);
     return __disarm_check_index_in_array(entity.anims, pos);
+}
+
+/// @desc Returns a reference to the animation data with this name. Note: any changes made
+///       to this struct will affect the representation of the animation.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} skin The name of the skin to get.
+function disarm_animation_get_data(_arm, _anim) {
+    var entity = _arm.entities[_arm.currentEntity];
+    var pos = __disarm_get_index_id_or_name(entity.animTable, _anim);
+    return entity.anims[pos];
 }
 
 /// @desc Resets the state of armature objects.
@@ -984,6 +1038,7 @@ function __disarm_import_entity(_struct) {
         info : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "obj_info"),
                 __disarm_import_entity_object),
+        infoTable : { },
         slots : [],
         slotsDrawOrder : [],
         slotCount : 0,
@@ -999,6 +1054,11 @@ function __disarm_import_entity(_struct) {
         skinTable : { },
         activeSkin : { },
     };
+    var info = entity.info;
+    var info_table = entity.infoTable;
+    for (var i = array_length(info) - 1; i >= 0; i -= 1) {
+        info_table[$ info[i].name] = i;
+    }
     var anims = entity.anims;
     var anim_table = entity.animTable;
     for (var i = array_length(anims) - 1; i >= 0; i -= 1) {
