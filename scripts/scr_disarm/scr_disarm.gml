@@ -1151,6 +1151,9 @@ function __disarm_import_entity_animation_mainline(_struct) {
 function __disarm_import_entity_animation_mainline_keyframe(_struct) {
     return {
         time : __disarm_struct_get_numeric_or_default(_struct, "time"),
+        curveType : __disarm_struct_get_string_or_default(_struct, "curve_type", "linear"),
+        cQuad : __disarm_struct_get_numeric_or_default(_struct, "c1"),
+        cCube : __disarm_struct_get_numeric_or_default(_struct, "c2"),
         slots : __disarm_array_map(
                 __disarm_struct_get_array(_struct, "object_ref"),
                 function(_struct) {
