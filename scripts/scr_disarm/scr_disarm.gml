@@ -310,6 +310,9 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
         }
     }
     var mainframe = mainline[idx_mainframe];
+    var curve_type = mainframe.curveType;
+    var control_quad = mainframe.cQuad;
+    var control_cube = mainframe.cCube;
     // apply bone animations
     var bone_refs = mainframe.bones;
     var bone_ref_count = array_length(bone_refs);
@@ -328,8 +331,10 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
         var scale_y = key.scaleY;
         var alpha = key.alpha;
         if (key_next != undefined) {
-            var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+            var linear = __disarm_animation_calculate_animation_interpolation_between_keyframes(
                     time, key.time, key_next.time, looping, time_duration);
+            var interp = __disarm_animation_calculate_curve_interpolation(
+                    curve_type, linear, control_quad, control_cube);
             pos_x = lerp(pos_x, key_next.posX, interp);
             pos_y = lerp(pos_y, key_next.posY, interp);
             angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
@@ -390,8 +395,10 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
             var pivot_y = key.pivotY;
             var alpha = key.alpha;
             if (key_next != undefined) {
-                var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+                var linear = __disarm_animation_calculate_animation_interpolation_between_keyframes(
                         time, key.time, key_next.time, looping, time_duration);
+                var interp = __disarm_animation_calculate_curve_interpolation(
+                        curve_type, linear, control_quad, control_cube);
                 pos_x = lerp(pos_x, key_next.posX, interp);
                 pos_y = lerp(pos_y, key_next.posY, interp);
                 angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
@@ -438,8 +445,10 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
             var scale_y = key.scaleY;
             var alpha = key.alpha;
             if (key_next != undefined) {
-                var interp = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+                var linear = __disarm_animation_calculate_animation_interpolation_between_keyframes(
                         time, key.time, key_next.time, looping, time_duration);
+                var interp = __disarm_animation_calculate_curve_interpolation(
+                        curve_type, linear, control_quad, control_cube);
                 pos_x = lerp(pos_x, key_next.posX, interp);
                 pos_y = lerp(pos_y, key_next.posY, interp);
                 angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
@@ -1323,6 +1332,47 @@ function __disarm_animation_calculate_animation_interpolation_between_keyframes(
         }
     }
     return _end == _start ? 0 : clamp((_seek - _start) / (_end - _start), 0, 1);
+}
+
+/// @desc Quadratic interpolation between two points.
+/// @param {real} a The first point to interpolate.
+/// @param {real} b The second point to interpolate.
+/// @param {real} c The control point to use.
+/// @param {real} amount The amount to interpolate between `a` and `b` by.
+function __disarm_interp_quadratic(_a, _b, _c, _amount) {
+    return lerp(lerp(_a, _b, _amount), lerp(_b, _c, _amount), _amount);
+}
+
+/// @desc Cubic interpolation between two points.
+/// @param {real} a The first point to interpolate.
+/// @param {real} b The second point to interpolate.
+/// @param {real} c1 The first control point to use.
+/// @param {real} c2 The second control point to use.
+/// @param {real} amount The amount to interpolate between `a` and `b` by.
+function __disarm_interp_cubic(_a, _b, _c1, _c2,  _amount) {
+    return lerp(
+            __disarm_interp_quadratic(_a, _b, _c1, _amount),
+            __disarm_interp_quadratic(_b, _c1, _c2, _amount), _amount);
+}
+
+/// @desc Applies an interpolation method to this amount.
+/// @param {string} method The interpolation method to use.
+/// @param {real} amount The linear interpolation to blend.
+/// @param {real} c1 The first control point. Used for quadratic interpolation.
+/// @param {real} c2 The second control point. Used for cubic interpolation.
+function __disarm_animation_calculate_curve_interpolation(_method, _amount, _c1, _c2) {
+    switch (_method) {
+    case "instant":
+        return 0;
+    case "linear":
+        return _amount;
+    case "quadratic":
+        return __disarm_interp_quadratic(0, _c1, 1, _amount);
+    case "cubic":
+        return __disarm_interp_cubic(0, _c1, _c2, 1, _amount);
+    default:
+        return 0;
+    }
 }
 
 /// @desc Updates the world transformation of a specific armature object relative to its parent.
