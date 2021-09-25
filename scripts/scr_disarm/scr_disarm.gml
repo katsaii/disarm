@@ -599,7 +599,7 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
         switch (slot.type) {
         case "bone":
             var len = slot.width * slot.scaleX;
-            var wid = 1;//abs(slot.height * slot.scaleY);
+            var wid = abs(len / 5 * slot.scaleY);
             var dir = slot.angle;
             var x1 = slot.posX;
             var y1 = slot.posY;
@@ -617,15 +617,14 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
             var alpha = 1;
             var col = c_green;
             draw_set_colour(col);
-            draw_arrow(slot.aX, slot.aY, slot.bX, slot.bY, abs(1 * slot.scaleY));
             draw_primitive_begin(pr_linestrip);
-            draw_vertex_color(slot.bX, slot.bY, col, alpha);
-            draw_vertex_color(slot.cX, slot.cY, col, alpha);
-            draw_vertex_color(slot.dX, slot.dY, col, alpha);
-            draw_vertex_color(slot.aX, slot.aY, col, alpha);
-            draw_vertex_color(slot.posX, slot.posY, col, alpha);
+            draw_vertex_colour(slot.aX, slot.aY, col, alpha);
+            draw_vertex_colour(slot.bX, slot.bY, col, alpha);
+            draw_vertex_colour(slot.cX, slot.cY, col, alpha);
+            draw_vertex_colour(slot.dX, slot.dY, col, alpha);
+            draw_vertex_colour(slot.aX, slot.aY, col, alpha);
+            draw_vertex_colour(slot.posX, slot.posY, c_lime, alpha);
             draw_primitive_end();
-            //draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
             break;
         case "point":
             var alpha = 1;
