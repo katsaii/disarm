@@ -10,3 +10,4 @@ debugOverlay = false;
 boneOverlay = false;
 iterations = 1;
 animationIdx = 0;
+skinIdx = -1;

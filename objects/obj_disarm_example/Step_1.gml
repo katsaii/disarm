@@ -47,3 +47,12 @@ if (keyboard_check_pressed(ord("9"))) {
 if (keyboard_check_pressed(ord("0"))) {
     animationIdx = 9;
 }
+if (keyboard_check_pressed(vk_tab)) {
+    skinIdx += 1;
+    disarm_skin_clear(arm);
+    if (disarm_skin_exists(arm, skinIdx)) {
+        disarm_skin_add(arm, skinIdx);
+    } else {
+        skinIdx = -1;
+    }
+}

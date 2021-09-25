@@ -7,7 +7,8 @@ var text = [
     ["Debug overlay", bool_to_string(debugOverlay), "D"],
     ["Bone overlay", bool_to_string(boneOverlay), "B"],
     ["Iterations", iterations, "page up and page down"],
-    ["Animation ID", animationIdx + 1, "number keys 0-9"],
+    ["Skin ID", skinIdx, "tab key"],
+    ["Animation ID", animationIdx, "number keys 0-9"],
     ["Animation progress", animationBlend, "hold left mouse button"],
 ];
 var n = array_length(text);
