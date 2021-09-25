@@ -9,11 +9,14 @@ Disarm is a [Spriter](https://brashmonkey.com/spriter-pro/) skeletal animation r
 ## Features
 
 Disarm supports most of the stable features of Spriter Pro, such as:
+ - Multiple entities per armature
+ - Pivot points
+ - Character maps
+ - Sprite and point attachments
  - Bone keyframes for translation, scale, rotation, parent, and transparency
  - Attachment keyframes for translation, scale, rotation, parent, transparency, pivot point, frame index, and z-index
- - Animate between keyframes instantly, or by using linear interpolation, quadratic interpolation, or cubic animation
- - Sprite and point attachments
- - Animate the z-order and hierarchy of bones and sprites
+ - Animating between keyframes instantly, or by using linear interpolation, quadratic interpolation, or cubic animation
+ - Animating the z-order and hierarchy of bones and sprites
 
 Other features supported by Disarm include:
  - Combine and layer multiple character maps
