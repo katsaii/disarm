@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./wanda.gif" />
+  <img width="460" height="460" src="./wanda.gif" />
 </p>
 
 # Disarm
