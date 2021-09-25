@@ -171,7 +171,7 @@ function disarm_skin_get_data(_arm, _skin) {
 /// @param {struct} arm The Disarm instance to update.
 function disarm_skin_clear(_arm) {
     var entity = _arm.entities[_arm.currentEntity];
-    entity.activeSkin = { };
+    entity.activeSkin = [];
 }
 
 /// @desc Adds a new character map, or array of character maps, to the current active skin.
@@ -190,13 +190,26 @@ function disarm_skin_add(_arm, _skin_names) {
         var maps = entity.skins[pos].maps;
         for (var j = array_length(maps) - 1; j >= 0; j -= 1) {
             var map = maps[j];
-            var folder = string(map.sourceFolder);
-            if not (variable_struct_exists(skin, folder)) {
-                skin[$ folder] = { };
+            var folder = __disarm_array_get_safe(skin, map.sourceFolder);
+            if not (is_array(folder)) {
+                folder = [];
+                skin[@ map.sourceFolder] = folder;
             }
-            skin[$ folder][$ string(map.sourceFile)] = [map.destFolder, map.destFile];
+            folder[@ map.sourceFile] = [map.destFolder, map.destFile];
         }
     }
+}
+
+/// @desc Returns a copy of the current skin.
+/// @param {struct} arm The Disarm instance to update.
+function disarm_skin_get(_arm, _skin_names) {
+    
+}
+
+/// @desc Overrites the current skin with a copy of a stashed skin.
+/// @param {struct} arm The Disarm instance to update.
+function disarm_skin_set(_arm, _skin_names) {
+    
 }
 
 /// @desc Returns whether an object exists with this name.
@@ -503,10 +516,10 @@ function disarm_animation_end(_arm) {
         case "sprite":
             var idx_folder = slot.folder;
             var idx_file = slot.file;
-            var folder_map = skin[$ string(idx_folder)];
-            if (folder_map != undefined) {
-                var file_map = folder_map[$ string(idx_file)];
-                if (file_map != undefined) {
+            var folder_map = __disarm_array_get_safe(skin, idx_folder);
+            if (is_array(folder_map)) {
+                var file_map = __disarm_array_get_safe(folder_map, idx_file);
+                if (is_array(file_map)) {
                     idx_folder = file_map[0];
                     idx_file = file_map[1];
                 }
@@ -1058,7 +1071,7 @@ function __disarm_import_entity(_struct) {
                 __disarm_struct_get_array(_struct, "character_map"),
                 __disarm_import_entity_character_map),
         skinTable : { },
-        activeSkin : { },
+        activeSkin : [],
     };
     var info = entity.info;
     var info_table = entity.infoTable;
@@ -1713,4 +1726,14 @@ function __disarm_compose_methods(_f, _g) {
     }, function(_x) {
         return f(g(_x));
     });
+}
+
+/// @desc Attempts to get a value from an array. If the index is out of bounds `undefined` is returned instead.
+/// @param {array} array The array to access.
+/// @param {real} pos The index to access.
+function __disarm_array_get_safe(_array, _i) {
+    if (_i < 0 || _i >= array_length(_array)) {
+        return undefined;
+    }
+    return _array[_i];
 }
