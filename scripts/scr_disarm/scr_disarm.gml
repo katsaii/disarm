@@ -628,7 +628,7 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
             draw_set_colour(slot.invalidWorldTransform ? c_red : c_yellow);
             draw_line(x1, y1, x2, y2);
             draw_ellipse(x1 - _scale_x * wid, y1 - _scale_y * wid,
-                    x1 + _scale_x * wid, y1 + _scale_y * wid, false);
+                    x1 + _scale_x * wid, y1 + _scale_y * wid, true);
             break;
         }
     }
@@ -656,19 +656,6 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
             draw_vertex_colour(x1, y1, col, alpha);
             draw_vertex_colour(x5, y5, c_lime, alpha);
             draw_primitive_end();
-            break;
-        case "point":
-            var alpha = 1;
-            var col = c_orange;
-            var r_x = abs(_scale_x * slot.scaleX);
-            var r_y = abs(_scale_y * slot.scaleY);
-            var dir = slot.angle;
-            var x1 = _offset_x + _scale_x * slot.posX;
-            var y1 = _offset_y + _scale_y * slot.posY;
-            var x2 = x1 + lengthdir_x(r_x, dir);
-            var y2 = y1 + lengthdir_y(r_y, dir);
-            draw_ellipse_colour(x1 - r_x, y1 - r_y, x1 + r_x, 1 - r_y, col, col, true);
-            draw_circle_colour(x2, y2, max(r_x, r_y), col, col, true);
             break;
         }
     }
