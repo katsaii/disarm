@@ -109,7 +109,7 @@ function disarm_flush() {
 
 /// @desc Returns whether an atlas exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} atlas The name of the atlas to check.
+/// @param {real} atlas_name_or_id The name of the atlas to check.
 function disarm_atlas_exists(_arm, _atlas) {
     var pos = __disarm_get_index_id_or_name(_arm.atlasTable, _atlas);
     return __disarm_check_index_in_array(_arm.atlases, pos);
@@ -118,7 +118,7 @@ function disarm_atlas_exists(_arm, _atlas) {
 /// @desc Returns a reference to the atlas data with this name. Note: any changes made to this
 ///       struct will affect the representation of the atlas in the animation.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} atlas The name of the atlas to get.
+/// @param {real} atlas_name_or_id The name of the atlas to get.
 function disarm_atlas_get_data(_arm, _atlas) {
     var pos = __disarm_get_index_id_or_name(_arm.atlasTable, _atlas);
     return _arm.atlases[pos];
@@ -126,7 +126,7 @@ function disarm_atlas_get_data(_arm, _atlas) {
 
 /// @desc Returns whether an entity exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} entity The name of the entity to check.
+/// @param {real} entity_name_or_id The name of the entity to check.
 function disarm_entity_exists(_arm, _entity) {
     var pos = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
     return __disarm_check_index_in_array(_arm.entities, pos);
@@ -135,7 +135,7 @@ function disarm_entity_exists(_arm, _entity) {
 /// @desc Returns a reference to the entity data with this name. Note: any changes made to this
 ///       struct will affect the representation of the entity in animation.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} entity The name of the entity to get.
+/// @param {real} entity_name_or_id The name of the entity to get.
 function disarm_entity_get_data(_arm, _entity) {
     var pos = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
     return _arm.entities[pos];
@@ -143,14 +143,14 @@ function disarm_entity_get_data(_arm, _entity) {
 
 /// @desc Sets the entity with this name as the current for this armature.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} entity The name of the entity to set.
+/// @param {real} entity_name_or_id The name of the entity to set.
 function disarm_entity_set(_arm, _entity) {
     _arm.currentEntity = __disarm_get_index_id_or_name(_arm.entityTable, _entity);
 }
 
 /// @desc Returns whether a character map exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} skin The name of the skin to check.
+/// @param {real} skin_name_or_id The name of the skin to check.
 function disarm_skin_exists(_arm, _skin) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.skinTable, _skin);
@@ -160,7 +160,7 @@ function disarm_skin_exists(_arm, _skin) {
 /// @desc Returns a reference to the skin data with this name. Note: any changes made to this
 ///       struct will affect the representation of the skin in animation.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} skin The name of the skin to get.
+/// @param {real} skin_name_or_id The name of the skin to get.
 function disarm_skin_get_data(_arm, _skin) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.skinTable, _skin);
@@ -176,7 +176,7 @@ function disarm_skin_clear(_arm) {
 
 /// @desc Adds a new character map, or array of character maps, to the current active skin.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {value} skin The name, or array of names, of character maps to add.
+/// @param {value} skin_name_or_id The name, or array of names, of character maps to add.
 function disarm_skin_add(_arm, _skin_names) {
     var entity = _arm.entities[_arm.currentEntity];
     var skin = entity.activeSkin;
@@ -223,7 +223,7 @@ function disarm_skin_set(_arm, _skin_data) {
 
 /// @desc Returns whether an object exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} object The name of the slot to object.
+/// @param {real} object_name_or_id The name of the object to check.
 function disarm_object_exists(_arm, _info) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.infoTable, _info);
@@ -233,7 +233,7 @@ function disarm_object_exists(_arm, _info) {
 /// @desc Returns a reference to the object data with this name. Note: any changes made to this
 ///       struct will affect the representation of the object in the animation.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} object The name of the object to get.
+/// @param {real} object_name_or_id The name of the object to get.
 function disarm_object_get_data(_arm, _bone) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.infoTable, _info);
@@ -242,7 +242,7 @@ function disarm_object_get_data(_arm, _bone) {
 
 /// @desc Returns whether a slot exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} slot The name of the slot to check.
+/// @param {real} slot_name_or_id The name of the slot to check.
 function disarm_slot_exists(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
     return is_numeric(_slot) ?
@@ -253,7 +253,7 @@ function disarm_slot_exists(_arm, _slot) {
 /// @desc Returns a reference to the slot data with this name. Note: any changes made to this
 ///       struct will affect the representation of the slot in the animation.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} slot The name of the slot to get.
+/// @param {real} slot_name_or_id The name of the slot to get.
 function disarm_slot_get_data(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
     return is_numeric(_slot) ? entity.slots[_slot] : entity.slotTable[$ string(_slot)][1];
@@ -261,7 +261,7 @@ function disarm_slot_get_data(_arm, _slot) {
 
 /// @desc Returns whether an animation exists with this name.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} anim The name of the animation to check.
+/// @param {real} anim_name_or_id The name of the animation to check.
 function disarm_animation_exists(_arm, _anim) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.animTable, _anim);
@@ -271,7 +271,7 @@ function disarm_animation_exists(_arm, _anim) {
 /// @desc Returns a reference to the animation data with this name. Note: any changes made
 ///       to this struct will affect the representation of the animation.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} skin The name of the skin to get.
+/// @param {real} anim_name_or_id The name of the animation to get.
 function disarm_animation_get_data(_arm, _anim) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.animTable, _anim);
@@ -305,7 +305,7 @@ function disarm_animation_begin(_arm) {
 
 /// @desc Adds an animation to the armature pose.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {real} anim The name of the animation to play.
+/// @param {real} anim_name_or_id The name of the animation to play.
 /// @param {real} progress The progress, as a number between 0 and 1, of the animation.
 /// @param {real} [blend_amount] The intensity of the animation.
 function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
@@ -665,7 +665,7 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
 
 /// @desc Renders a debug view of the armature atlas.
 /// @param {struct} arm The Disarm instance to render.
-/// @param {name} name The name of the atlas the draw.
+/// @param {name} atlas_name_or_id The name of the atlas the draw.
 /// @param {real} x The x position to render the atlas debug window.
 /// @param {real} y The y position to render the atlas debug window.
 /// @param {real} [width] The width of the debug window.
