@@ -202,14 +202,23 @@ function disarm_skin_add(_arm, _skin_names) {
 
 /// @desc Returns a copy of the current skin.
 /// @param {struct} arm The Disarm instance to update.
-function disarm_skin_get(_arm, _skin_names) {
-    
+function disarm_skin_get(_arm) {
+    var entity = _arm.entities[_arm.currentEntity];
+    return {
+        arm : _arm,
+        skin : __disarm_array_clone_deep(entity.activeSkin),
+    };
 }
 
 /// @desc Overrites the current skin with a copy of a stashed skin.
 /// @param {struct} arm The Disarm instance to update.
-function disarm_skin_set(_arm, _skin_names) {
-    
+/// @param {value} skin The skin to apply.
+function disarm_skin_set(_arm, _skin_data) {
+    if (_skin_data.arm != _arm) {
+        return;
+    }
+    var entity = _arm.entities[_arm.currentEntity];
+    entity.activeSkin = __disarm_array_clone_deep(_skin_data.skin);
 }
 
 /// @desc Returns whether an object exists with this name.
@@ -498,12 +507,13 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
 
 /// @desc Updates the world transformation of armature objects.
 /// @param {struct} arm The Disarm instance to update.
-function disarm_animation_end(_arm) {
+/// @param {value} [skin] The skin to use.
+function disarm_animation_end(_arm, _skin_data=undefined) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
     var slots = entity.slots;
     var slot_count = entity.slotCount;
-    var skin = entity.activeSkin;
+    var skin = _skin_data == undefined || _skin_data.arm != _arm ? entity.activeSkin : _skin_data.skin;
     var folders = _arm.folders;
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         __disarm_update_world_transform_using_object_array(info, i);
@@ -1736,4 +1746,27 @@ function __disarm_array_get_safe(_array, _i) {
         return undefined;
     }
     return _array[_i];
+}
+
+/// @desc Returns a clone of an array.
+/// @param variable {Array} The array to clone.
+function __disarm_wierd_hack_for_array_clone(_in) {
+    if (array_length(_in) < 1) {
+        return [];
+    }
+    _in[0] = _in[0];
+    return _in;
+}
+
+/// @desc Returns a deep clone of an array.
+/// @param variable {Array} The array to clone.
+function __disarm_array_clone_deep(_in) {
+    var out = __disarm_wierd_hack_for_array_clone(_in);
+    for (var i = array_length(out) - 1; i >= 0; i -= 1) {
+        var elem = out[i];
+        if (is_array(elem)) {
+            out[@ i] = __disarm_wierd_hack_for_array_clone(elem);
+        }
+    }
+    return out;
 }
