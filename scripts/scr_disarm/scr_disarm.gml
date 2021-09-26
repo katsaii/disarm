@@ -610,9 +610,6 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
     var slots = entity.slotsDrawOrder;
     var default_colour = draw_get_color();
     var default_alpha = draw_get_alpha();
-    var default_matrix = matrix_get(matrix_world);
-    matrix_set(matrix_world, matrix_multiply(default_matrix,
-            matrix_build(_offset_x, _offset_y, 0, 0, 0, 0, _scale_x, _scale_y, 1)));
     draw_set_alpha(1);
     for (var i = array_length(info) - 1; i >= 0; i -= 1) {
         var slot = info[i];
@@ -622,14 +619,16 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
         switch (slot.type) {
         case "bone":
             var len = slot.width * slot.scaleX;
-            var wid = abs(len / 5 * slot.scaleY);
+            var wid = abs(len / 10 * slot.scaleY);
             var dir = slot.angle;
-            var x1 = slot.posX;
-            var y1 = slot.posY;
-            var x2 = x1 + lengthdir_x(len, dir);
-            var y2 = y1 + lengthdir_y(len, dir);
+            var x1 = _offset_x + _scale_x * slot.posX;
+            var y1 = _offset_y + _scale_y * slot.posY;
+            var x2 = x1 + _scale_x * lengthdir_x(len, dir);
+            var y2 = y1 + _scale_y * lengthdir_y(len, dir);
             draw_set_colour(slot.invalidWorldTransform ? c_red : c_yellow);
-            draw_arrow(x1, y1, x2, y2, wid);
+            draw_line(x1, y1, x2, y2);
+            draw_ellipse(x1 - _scale_x * wid, y1 - _scale_y * wid,
+                    x1 + _scale_x * wid, y1 + _scale_y * wid, false);
             break;
         }
     }
@@ -639,34 +638,42 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
         case "sprite":
             var alpha = 1;
             var col = c_green;
-            draw_set_colour(col);
+            var x1 = _offset_x + _scale_x * slot.aX;
+            var y1 = _offset_y + _scale_y * slot.aY;
+            var x2 = _offset_x + _scale_x * slot.bX;
+            var y2 = _offset_y + _scale_y * slot.bY;
+            var x3 = _offset_x + _scale_x * slot.cX;
+            var y3 = _offset_y + _scale_y * slot.cY;
+            var x4 = _offset_x + _scale_x * slot.dX;
+            var y4 = _offset_y + _scale_y * slot.dY;
+            var x5 = _offset_x + _scale_x * slot.posX;
+            var y5 = _offset_y + _scale_y * slot.posY;
             draw_primitive_begin(pr_linestrip);
-            draw_vertex_colour(slot.aX, slot.aY, col, alpha);
-            draw_vertex_colour(slot.bX, slot.bY, col, alpha);
-            draw_vertex_colour(slot.cX, slot.cY, col, alpha);
-            draw_vertex_colour(slot.dX, slot.dY, col, alpha);
-            draw_vertex_colour(slot.aX, slot.aY, col, alpha);
-            draw_vertex_colour(slot.posX, slot.posY, c_lime, alpha);
+            draw_vertex_colour(x1, y1, col, alpha);
+            draw_vertex_colour(x2, y2, col, alpha);
+            draw_vertex_colour(x3, y3, col, alpha);
+            draw_vertex_colour(x4, y4, col, alpha);
+            draw_vertex_colour(x1, y1, col, alpha);
+            draw_vertex_colour(x5, y5, c_lime, alpha);
             draw_primitive_end();
             break;
         case "point":
             var alpha = 1;
             var col = c_orange;
-            var r = 1;
-            var x1 = slot.posX;
-            var y1 = slot.posY;
+            var r_x = abs(_scale_x * slot.scaleX);
+            var r_y = abs(_scale_y * slot.scaleY);
             var dir = slot.angle;
-            var x2 = x1 + lengthdir_x(r, dir);
-            var y2 = y1 + lengthdir_y(r, dir);
-            draw_circle_colour(x1, y1, r, col, col, true);
-            draw_circle_colour(x2, y2, r / 2, col, col, false);
-            draw_text_color(slot.posX, slot.posY, slot.zIndex, col, col, col, col, alpha);
+            var x1 = _offset_x + _scale_x * slot.posX;
+            var y1 = _offset_y + _scale_y * slot.posY;
+            var x2 = x1 + lengthdir_x(r_x, dir);
+            var y2 = y1 + lengthdir_y(r_y, dir);
+            draw_ellipse_colour(x1 - r_x, y1 - r_y, x1 + r_x, 1 - r_y, col, col, true);
+            draw_circle_colour(x2, y2, max(r_x, r_y), col, col, true);
             break;
         }
     }
     draw_set_colour(default_colour);
     draw_set_alpha(default_alpha);
-    matrix_set(matrix_world, default_matrix);
 }
 
 /// @desc Renders a debug view of the armature atlas.
