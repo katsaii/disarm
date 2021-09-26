@@ -1,10 +1,10 @@
-# Disarm
-
-Disarm is a [Spriter](https://brashmonkey.com/spriter-pro/) skeletal animation runtime for GameMaker Studio 2.3. Disarm is written in pure GML in order to support the greatest possible range of platforms.
-
 <p align="center">
   <img width="300" height="300" src="./wanda.gif" />
 </p>
+
+# Disarm
+
+Disarm is a [Spriter](https://brashmonkey.com/spriter-pro/) skeletal animation runtime for GameMaker Studio 2.3. Disarm is written in pure GML in order to support the greatest possible range of platforms.
 
 ## Features
 
