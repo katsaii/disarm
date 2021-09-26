@@ -727,9 +727,16 @@ function disarm_draw_debug_atlas(_arm, _atlas, _x, _y, _width=undefined, _height
 function disarm_mesh_create() {
     return {
         partialBatch : false,
-        batches : [],
-        batchCount : 0,
-        batchCapacity : 0,
+        builder : {
+            batches : [],
+            batchCount : 0,
+            batchCapacity : 0,
+        },
+        render : {
+            batches : [],
+            batchCount : 0,
+            batchCapacity : 0,
+        },
         currentPage : undefined,
     };
 }
@@ -739,10 +746,14 @@ function disarm_mesh_create() {
 /// @param {struct} mesh The mesh to destroy.
 function disarm_mesh_destroy(_mesh) {
     __disarm_mesh_batch_end(_mesh);
-    var batches = _mesh.batches;
-    for (var i = _mesh.batchCapacity - 1; i >= 0; i -= 1) {
-        var batch = batches[i];
-        vertex_delete_buffer(batch.vbuff);
+    var meshes = [_mesh.builder, _mesh.render];
+    for (var m = 0; m <= 1; m += 1) {
+        var mesh = meshes[m];
+        var batches = mesh.batches;
+        for (var i = mesh.batchCapacity - 1; i >= 0; i -= 1) {
+            var batch = batches[i];
+            vertex_delete_buffer(batch.vbuff);
+        }
     }
 }
 
@@ -750,7 +761,7 @@ function disarm_mesh_destroy(_mesh) {
 /// @param {struct} mesh The mesh to begin drawing.
 function disarm_mesh_begin(_mesh) {
     _mesh.partialBatch = false;
-    _mesh.batchCount = 0;
+    _mesh.builder.batchCount = 0;
     _mesh.currentPage = undefined;
 }
 
@@ -766,8 +777,9 @@ function disarm_mesh_add_armature(_mesh, _arm, _offset_x=0, _offset_y=0, _scale_
     var atlases = _arm.atlases;
     var slots = entity.slotsDrawOrder;
     var slot_count = entity.slotCount;
+    var builder = _mesh.builder;
     var page = _mesh.currentPage;
-    var batches = _mesh.batches;
+    var batches = builder.batches;
     for (var i = 0; i < slot_count; i += 1) {
         var slot = slots[i];
         switch (slot.type) {
@@ -793,7 +805,7 @@ function disarm_mesh_add_armature(_mesh, _arm, _offset_x=0, _offset_y=0, _scale_
                 __disarm_mesh_batch_begin(_mesh, new_page);
                 page = new_page;
             }
-            var vbuff = batches[_mesh.batchCount].vbuff;
+            var vbuff = batches[builder.batchCount].vbuff;
             var colour = c_white;
             var alpha = slot.alpha;
             var a_x = _offset_x + _scale_x * slot.aX;
@@ -840,13 +852,18 @@ function disarm_mesh_add_armature(_mesh, _arm, _offset_x=0, _offset_y=0, _scale_
 /// @param {struct} mesh The mesh to finalise drawing.
 function disarm_mesh_end(_mesh) {
     __disarm_mesh_batch_end(_mesh);
+    // swap the builder with the render
+    var tmp = _mesh.render;
+    _mesh.render = _mesh.builder;
+    _mesh.builder = tmp;
 }
 
 /// @desc Submits this mesh to the draw pipeline.
 /// @param {struct} mesh The mesh to submit.
 function disarm_mesh_submit(_mesh) {
-    var batches = _mesh.batches;
-    var count = _mesh.batchCount;
+    var render = _mesh.render;
+    var batches = render.batches;
+    var count = render.batchCount;
     for (var i = 0; i < count; i += 1) {
         var batch = batches[i];
         vertex_submit(batch.vbuff, pr_trianglelist, batch.page);
@@ -1467,9 +1484,10 @@ function __disarm_get_full_fat_vertex_format() {
 /// @param {struct} mesh The mesh to end the batch of.
 function __disarm_mesh_batch_end(_mesh) {
     if (_mesh.partialBatch) {
-        vertex_end(_mesh.batches[_mesh.batchCount].vbuff);
+        var builder = _mesh.builder;
+        vertex_end(builder.batches[builder.batchCount].vbuff);
         _mesh.partialBatch = false;
-        _mesh.batchCount += 1;
+        builder.batchCount += 1;
     }
 }
 
@@ -1478,15 +1496,16 @@ function __disarm_mesh_batch_end(_mesh) {
 /// @param {pointer} texture The pointer to the texture to use.
 function __disarm_mesh_batch_begin(_mesh, _texture) {
     _mesh.partialBatch = true;
-    var i = _mesh.batchCount;
-    if (i >= _mesh.batchCapacity) {
-        array_push(_mesh.batches, {
+    var builder = _mesh.builder;
+    var i = builder.batchCount;
+    if (i >= builder.batchCapacity) {
+        array_push(builder.batches, {
             vbuff : vertex_create_buffer(),
             page : _texture,
         });
-        _mesh.batchCapacity += 1;
+        builder.batchCapacity += 1;
     }
-    vertex_begin(_mesh.batches[i].vbuff, __disarm_get_full_fat_vertex_format());
+    vertex_begin(builder.batches[i].vbuff, __disarm_get_full_fat_vertex_format());
 }
 
 /// @desc Asserts that a struct field exists and holds an expected set of values.
