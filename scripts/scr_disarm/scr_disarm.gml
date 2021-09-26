@@ -133,7 +133,7 @@ function disarm_entity_exists(_arm, _entity) {
 }
 
 /// @desc Returns a reference to the entity data with this name. Note: any changes made to this
-///       struct will affect the representation of the entity in animation.
+///       struct will affect the representation of the entity in the animation.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} entity_name_or_id The name of the entity to get.
 function disarm_entity_get_data(_arm, _entity) {
@@ -158,7 +158,7 @@ function disarm_skin_exists(_arm, _skin) {
 }
 
 /// @desc Returns a reference to the skin data with this name. Note: any changes made to this
-///       struct will affect the representation of the skin in animation.
+///       struct will affect the representation of the skin in the animation.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} skin_name_or_id The name of the skin to get.
 function disarm_skin_get_data(_arm, _skin) {
@@ -176,7 +176,7 @@ function disarm_skin_clear(_arm) {
 
 /// @desc Adds a new character map, or array of character maps, to the current active skin.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {value} skin_name_or_id The name, or array of names, of character maps to add.
+/// @param {value} skin_name_or_id The name, or array of names, of skins to add.
 function disarm_skin_add(_arm, _skin_names) {
     var entity = _arm.entities[_arm.currentEntity];
     var skin = entity.activeSkin;
@@ -212,7 +212,7 @@ function disarm_skin_get(_arm) {
 
 /// @desc Overrites the current skin with a copy of a stashed skin.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {value} skin The skin to apply.
+/// @param {value} skin_data The skin to apply.
 function disarm_skin_set(_arm, _skin_data) {
     if (_skin_data.arm != _arm) {
         return;
@@ -507,7 +507,7 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
 
 /// @desc Updates the world transformation of armature objects.
 /// @param {struct} arm The Disarm instance to update.
-/// @param {value} [skin] The skin to use.
+/// @param {value} [skin_data] The skin to use.
 function disarm_animation_end(_arm, _skin_data=undefined) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
@@ -602,8 +602,8 @@ function disarm_animation_end(_arm, _skin_data=undefined) {
 /// @param {struct} arm The Disarm instance to render.
 /// @param {real} [x] The X offset to render the armature at.
 /// @param {real} [y] The Y offset to render the armature at.
-/// @param {real} [xscale] The X scale to render the armature at.
-/// @param {real} [yscale] The Y scale to render the armature at.
+/// @param {real} [xscale] The X scale to render the armature with.
+/// @param {real} [yscale] The Y scale to render the armature with.
 function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=1) {
     var entity = _arm.entities[_arm.currentEntity];
     var info = entity.info;
@@ -663,11 +663,11 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
     draw_set_alpha(default_alpha);
 }
 
-/// @desc Renders a debug view of the armature atlas.
+/// @desc Renders a debug view of an armature atlas.
 /// @param {struct} arm The Disarm instance to render.
 /// @param {name} atlas_name_or_id The name of the atlas the draw.
-/// @param {real} x The x position to render the atlas debug window.
-/// @param {real} y The y position to render the atlas debug window.
+/// @param {real} x The X position to render the atlas debug window.
+/// @param {real} y The Y position to render the atlas debug window.
 /// @param {real} [width] The width of the debug window.
 /// @param {real} [height] The height of the debug window.
 function disarm_draw_debug_atlas(_arm, _atlas, _x, _y, _width=undefined, _height=undefined) {
@@ -737,7 +737,7 @@ function disarm_mesh_create() {
 
 /// @desc Destroys this Disarm mesh. Because Disarm meshes use vertex buffers, this
 ///       function **must** be called in the Clean-up event of any objects that use it.
-/// @param {struct} mesh The mesh to destroy.
+/// @param {struct} mesh The Disarm mesh to destroy.
 function disarm_mesh_destroy(_mesh) {
     __disarm_mesh_batch_end(_mesh);
     var meshes = [_mesh.builder, _mesh.render];
@@ -752,7 +752,7 @@ function disarm_mesh_destroy(_mesh) {
 }
 
 /// @desc Resets the draw options for this mesh.
-/// @param {struct} mesh The mesh to begin drawing.
+/// @param {struct} mesh The Disarm mesh to begin drawing.
 function disarm_mesh_begin(_mesh) {
     _mesh.partialBatch = false;
     _mesh.builder.batchCount = 0;
@@ -760,12 +760,12 @@ function disarm_mesh_begin(_mesh) {
 }
 
 /// @desc Adds the current world transform of an armature to this mesh.
-/// @param {struct} mesh The mesh to add vertices to.
+/// @param {struct} mesh The Disarm mesh to add vertices to.
 /// @param {struct} arm The armature to get vertices from.
 /// @param {real} [x] The X offset to render the armature at.
 /// @param {real} [y] The Y offset to render the armature at.
-/// @param {real} [xscale] The X scale to render the armature at.
-/// @param {real} [yscale] The Y scale to render the armature at.
+/// @param {real} [xscale] The X scale to render the armature with.
+/// @param {real} [yscale] The Y scale to render the armature with.
 function disarm_mesh_add_armature(_mesh, _arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=1) {
     var entity = _arm.entities[_arm.currentEntity];
     var atlases = _arm.atlases;
@@ -843,7 +843,7 @@ function disarm_mesh_add_armature(_mesh, _arm, _offset_x=0, _offset_y=0, _scale_
 }
 
 /// @desc Finalises the drawing of this mesh.
-/// @param {struct} mesh The mesh to finalise drawing.
+/// @param {struct} mesh The Disarm mesh to finalise.
 function disarm_mesh_end(_mesh) {
     __disarm_mesh_batch_end(_mesh);
     // swap the builder with the render
@@ -853,7 +853,7 @@ function disarm_mesh_end(_mesh) {
 }
 
 /// @desc Submits this mesh to the draw pipeline.
-/// @param {struct} mesh The mesh to submit.
+/// @param {struct} mesh The Disarm mesh to draw.
 function disarm_mesh_submit(_mesh) {
     var render = _mesh.render;
     var batches = render.batches;
