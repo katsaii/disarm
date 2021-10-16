@@ -1,6 +1,4 @@
-do {
-    path = get_string("type the path of the armature to load", "armature") + ".scon";
-} until (file_exists(path));
+path = get_string("type the path of the armature to load", "armature") + ".scon";
 arm = disarm_import(path);
 mesh = disarm_mesh_create();
 scale = 1;

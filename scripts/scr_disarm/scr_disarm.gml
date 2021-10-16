@@ -27,7 +27,7 @@ function disarm_import_custom(_events) {
                 var new_spr = sprite_add(_x, 1, false, false, 0, 0);
                 return __disarm_make_sprite_information_managed(new_spr);
             }
-        } else if (is_numeric(_x) && sprite_exists(_x)) {
+        } else if (__disarm_is_actually_numeric(_x) && sprite_exists(_x)) {
             return __disarm_make_sprite_information(_x);
         }
         return __disarm_make_sprite_information(-1);
@@ -73,10 +73,14 @@ function disarm_import_ext(_arm, _atlas_map={ }, _image_map={ }) {
 /// @param {string} path The file path of the skeleton file.
 /// @param {struct} [image_map] A map from image names to image data.
 function disarm_import(_path, _image_map={ }) {
+    var delim_pos = string_last_pos("/", _path);
+    if (delim_pos == 0) {
+        delim_pos = string_last_pos("\\", _path);
+    }
     var get_path = method({
-        dirname : filename_dir(_path),
+        path : delim_pos == 0 ? "" : string_copy(_path, 1, delim_pos),
     }, function(_name) {
-        return dirname + "/" + _name;
+        return path + _name;
     });
     return disarm_import_custom({
         armature : method({
@@ -245,7 +249,7 @@ function disarm_object_get_data(_arm, _bone) {
 /// @param {real} slot_name_or_id The name of the slot to check.
 function disarm_slot_exists(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
-    return is_numeric(_slot) ?
+    return __disarm_is_actually_numeric(_slot) ?
             __disarm_check_index_in_array(entity.slots, _slot) :
             variable_struct_exists(entity.slotTable, string(_slot));
 }
@@ -256,7 +260,7 @@ function disarm_slot_exists(_arm, _slot) {
 /// @param {real} slot_name_or_id The name of the slot to get.
 function disarm_slot_get_data(_arm, _slot) {
     var entity = _arm.entities[_arm.currentEntity];
-    return is_numeric(_slot) ? entity.slots[_slot] : entity.slotTable[$ string(_slot)][1];
+    return __disarm_is_actually_numeric(_slot) ? entity.slots[_slot] : entity.slotTable[$ string(_slot)][1];
 }
 
 /// @desc Returns whether an animation exists with this name.
@@ -1248,6 +1252,7 @@ function __disarm_import_entity_animation_timeline_keyframe(_struct) {
 function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
     var bone = __disarm_struct_get_struct(_struct, "bone");
+    show_debug_message("crumb");
     key.posX = __disarm_struct_get_numeric_or_default(bone, "x");
     key.posY = -__disarm_struct_get_numeric_or_default(bone, "y");
     key.angle = __disarm_struct_get_numeric_or_default(bone, "angle");
@@ -1464,13 +1469,16 @@ function __disarm_update_world_transform_using_object_array(_info, _idx) {
 
 /// @desc Returns the preferred vertex format.
 function __disarm_get_full_fat_vertex_format() {
-    static format = (function() {
+    static init = true;
+    static format = undefined;
+    if (init) {
+        init = false;
         vertex_format_begin();
         vertex_format_add_position();
         vertex_format_add_colour();
         vertex_format_add_texcoord();
-        return vertex_format_end();
-    })();
+        format = vertex_format_end();
+    }
     return format;
 }
 
@@ -1535,6 +1543,16 @@ function __disarm_struct_get_string_or_default(_struct, _key, _default="") {
     return _default;
 }
 
+/// @desc Returns whether a value is *actually* numeric, because GameMaker can be picky.
+/// @param {value} value The value to check.
+function __disarm_is_actually_numeric(_value) {
+    return is_numeric(_value) ||
+            is_real(_value) ||
+            is_bool(_value) ||
+            is_int32(_value) ||
+            is_int64(_value);
+}
+
 /// @desc Attempts to get a numeric value from a struct, and returns a default value
 ///       if it doesn't exist.
 /// @param {struct} struct The struct to check.
@@ -1543,7 +1561,7 @@ function __disarm_struct_get_string_or_default(_struct, _key, _default="") {
 function __disarm_struct_get_numeric_or_default(_struct, _key, _default=0) {
     if (variable_struct_exists(_struct, _key)) {
         var value = _struct[$ _key];
-        if (is_numeric(value)) {
+        if (__disarm_is_actually_numeric(value)) {
             return value;
         } else {
             try {
@@ -1571,7 +1589,7 @@ function __disarm_struct_get_bool_or_default(_struct, _key, _default=false) {
                 return false;
             }
         }
-        if (is_numeric(value)) {
+        if (__disarm_is_actually_numeric(value)) {
             return bool(value);
         } else {
             try {
@@ -1593,7 +1611,7 @@ function __disarm_struct_get_method_or_default(_struct, _key, _default=undefined
         var value = _struct[$ _key];
         if (is_method(value)) {
             return _ignore_self && method_get_self(value) == _struct ? method_get_index(value) : value;
-        } else if (is_numeric(value) && script_exists(value)) {
+        } else if (__disarm_is_actually_numeric(value) && script_exists(value)) {
             return value;
         }
     }
@@ -1668,14 +1686,14 @@ function __disarm_find_struct_with_name_in_array(_values, _expected_name) {
 /// @param {struct} names The struct to check.
 /// @param {value} name_or_index The name to search for.
 function __disarm_get_index_id_or_name(_names, _idx) {
-    return is_numeric(_idx) ? _idx : _names[$ string(_idx)];
+    return __disarm_is_actually_numeric(_idx) ? _idx : _names[$ string(_idx)];
 }
 
 /// @desc Returns whether an index is in the bounds of an array.
 /// @param {array} arr The array to check.
 /// @param {value} pos The position to check.
 function __disarm_check_index_in_array(_arr, _pos) {
-    return is_numeric(_pos) && _pos >= 0 && _pos < array_length(_arr);
+    return __disarm_is_actually_numeric(_pos) && _pos >= 0 && _pos < array_length(_arr);
 }
 
 /// @desc Performs a binary search and returns the ID of the first structure where the `time` field
