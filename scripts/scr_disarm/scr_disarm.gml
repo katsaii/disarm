@@ -864,7 +864,9 @@ function disarm_mesh_submit(_mesh) {
     var count = render.batchCount;
     for (var i = 0; i < count; i += 1) {
         var batch = batches[i];
-        vertex_submit(batch.vbuff, pr_trianglelist, batch.page);
+        var buff = batch.vbuff;
+        var page = batch.page;
+        vertex_submit(buff, pr_trianglelist, page);
     }
 }
 
@@ -1252,7 +1254,6 @@ function __disarm_import_entity_animation_timeline_keyframe(_struct) {
 function __disarm_import_entity_animation_timeline_keyframe_bone(_struct) {
     var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
     var bone = __disarm_struct_get_struct(_struct, "bone");
-    show_debug_message("crumb");
     key.posX = __disarm_struct_get_numeric_or_default(bone, "x");
     key.posY = -__disarm_struct_get_numeric_or_default(bone, "y");
     key.angle = __disarm_struct_get_numeric_or_default(bone, "angle");
