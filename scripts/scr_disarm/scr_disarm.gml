@@ -238,7 +238,7 @@ function disarm_object_exists(_arm, _info) {
 ///       struct will affect the representation of the object in the animation.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} object_name_or_id The name of the object to get.
-function disarm_object_get_data(_arm, _bone) {
+function disarm_object_get_data(_arm, _info) {
     var entity = _arm.entities[_arm.currentEntity];
     var pos = __disarm_get_index_id_or_name(entity.infoTable, _info);
     return entity.info[pos];
