@@ -244,6 +244,30 @@ function disarm_object_get_data(_arm, _info) {
     return entity.info[pos];
 }
 
+/// @desc Returns whether a bone exists with this name.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} bone_name_or_id The name of the object to check.
+function disarm_bone_exists(_arm, _bone) {
+    if (disarm_object_exists(_arm, _bone)) {
+        return disarm_object_get_data(_arm, _bone).type == "bone";
+    } else {
+        return false;
+    }
+}
+
+/// @desc Returns a reference to the bone data with this name. Note: any changes made to this
+///       struct will affect the representation of the object in the animation.
+/// @param {struct} arm The Disarm instance to update.
+/// @param {real} bone_name_or_id The name of the object to get.
+function disarm_bone_get_data(_arm, _bone) {
+    var info = disarm_object_get_data(_arm, _bone);
+    if (info.type == "bone") {
+        return info;
+    } else {
+        return undefined;
+    }
+}
+
 /// @desc Returns whether a slot exists with this name.
 /// @param {struct} arm The Disarm instance to update.
 /// @param {real} slot_name_or_id The name of the slot to check.
