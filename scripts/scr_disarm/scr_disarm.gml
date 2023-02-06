@@ -957,15 +957,19 @@ function __disarm_make_sprite_information_managed(_sprite) {
 /// @desc Reads the whole contents of a file and returns it as a string.
 /// @param {string} filepath The path of the file to load.
 function __disarm_read_whole_text_file_from_path(_path) {
-    var src = "";
-    if (file_exists(_path)) {
-        var file = file_text_open_read(_path);
-        while not (file_text_eof(file)) {
-            src += file_text_readln(file);
-        }
-        file_text_close(file);
-    }
+    var buff = buffer_load(_path);
+    var src = buffer_read(buff, buffer_text);
+    buffer_delete(buff);
     return src;
+    //var src = "";
+    //if (file_exists(_path)) {
+    //    var file = file_text_open_read(_path);
+    //    while not (file_text_eof(file)) {
+    //        src += file_text_readln(file);
+    //    }
+    //    file_text_close(file);
+    //}
+    //return src;
 }
 
 /// @desc Creates a new Disarm armature.
