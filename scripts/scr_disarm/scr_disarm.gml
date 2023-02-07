@@ -1456,7 +1456,7 @@ function __disarm_update_world_transform(_child, _bone_parent) {
     var dir = _child.angle;
     if (par_scale_x < 0) {
         // flip direction through y-axis
-        dir = 180 - dir;
+        //dir = 180 - dir; // actually don't, i don't think this is how the Spriter runtime is meant to work
     }
     if (par_scale_y < 0) {
         // flip direction through x-axis
