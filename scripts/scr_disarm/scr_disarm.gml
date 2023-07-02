@@ -22,7 +22,7 @@ function disarm_import_custom(_events) {
     static aux_image = function(_x) {
         if (is_string(_x)) {
             if (asset_get_type(_x) == asset_sprite) {
-                return __disarm_make_sprite_information(_x);
+                return __disarm_make_sprite_information(asset_get_index(_x));
             } else if (file_exists(_x)) {
                 var new_spr = sprite_add(_x, 1, false, false, 0, 0);
                 return __disarm_make_sprite_information_managed(new_spr);
@@ -318,6 +318,7 @@ function disarm_animation_begin(_arm) {
         slot.active = false;
         switch (slot.type) {
         case "bone":
+        case "box":
             slot.invalidWorldTransform = true;
             slot.posX = 0;
             slot.posY = 0;
@@ -484,6 +485,57 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
             slot.pivotY = pivot_y;
             slot.alpha = alpha;
             break;
+        case "box":
+            // get interpolation
+            var pos_x = key.posX;
+            var pos_y = key.posY;
+            var angle = key.angle;
+            var scale_x = key.scaleX;
+            var scale_y = key.scaleY;
+            var pivot_use_default = key.useDefaultPivot;
+            var pivot_x = key.pivotX;
+            var pivot_y = key.pivotY;
+            var alpha = key.alpha;
+            if (key_next != undefined) {
+                var linear = __disarm_animation_calculate_animation_interpolation_between_keyframes(
+                        time, key.time, key_next.time, looping, time_duration);
+                var interp = __disarm_animation_calculate_curve_interpolation(
+                        curve_type, linear, control_quad, control_cube);
+                pos_x = lerp(pos_x, key_next.posX, interp);
+                pos_y = lerp(pos_y, key_next.posY, interp);
+                angle = __disarm_animation_lerp_angle(angle, key_next.angle, key.spin, interp);
+                scale_x = lerp(scale_x, key_next.scaleX, interp);
+                scale_y = lerp(scale_y, key_next.scaleY, interp);
+                //if not (pivot_use_default) { // wtf, not actually needed?!
+                //    pivot_x = lerp(pivot_x, key_next.pivotX, interp);
+                //    pivot_y = lerp(pivot_y, key_next.pivotY, interp);
+                //}
+                alpha = lerp(alpha, key_next.alpha, interp);
+            }
+            // blend between current and new animation
+            if (_amount != undefined) {
+                pos_x = lerp(slot.posX, pos_x, _amount);
+                pos_y = lerp(slot.posY, pos_y, _amount);
+                angle = __disarm_animation_lerp_angle(slot.angle, angle, 1, _amount);
+                scale_x = lerp(slot.scaleX, scale_x, _amount);
+                scale_y = lerp(slot.scaleY, scale_y, _amount);
+                //if not (pivot_use_default) { // wtf
+                //    pivot_x = lerp(slot.pivotX, pivot_x, _amount);
+                //    pivot_y = lerp(slot.pivotY, pivot_y, _amount);
+                //}
+                alpha = lerp(slot.alpha, alpha, _amount);
+            }
+            // apply transformations
+            slot.posX = pos_x;
+            slot.posY = pos_y;
+            slot.angle = angle;
+            slot.scaleX = scale_x;
+            slot.scaleY = scale_y;
+            slot.useDefaultPivot = pivot_use_default;
+            slot.pivotX = pivot_x;
+            slot.pivotY = pivot_y;
+            slot.alpha = alpha;
+            break;
         case "point":
             // get interpolation
             var pos_x = key.posX;
@@ -529,6 +581,12 @@ function disarm_animation_add(_arm, _anim, _progress, _amount=undefined) {
         } else {
             var bone_ref_parent = bone_refs[idx_slot_ref_parent];
             slot.boneParent = timelines[bone_ref_parent.timeline].slot;
+        }
+        if (timeline.slot != -1) {
+            slot.obj = info[timeline.slot];
+            slot.obj.active = true; // enables the object visibility
+        } else {
+            slot.obj = undefined;
         }
     }
 }
@@ -605,6 +663,51 @@ function disarm_animation_end(_arm, _skin_data=undefined) {
             slot.idxAtlas = folder.atlas;
             slot.frameName = file.name;
             break;
+        case "box":
+            var box = slot.obj;
+            box.posX = slot.posX; // HACKY
+            box.posY = slot.posY;
+            box.angle = slot.angle;
+            box.scaleX = slot.scaleX;
+            box.scaleY = slot.scaleY;
+            box.alpha = slot.alpha;
+            box.boneParent = slot.boneParent;
+            __disarm_update_world_transform(box, bone_parent);
+            var pivot_x, pivot_y;
+            if (slot.useDefaultPivot) {
+                pivot_x = file.pivotX;
+                pivot_y = file.pivotY;
+            } else {
+                pivot_x = slot.pivotX;
+                pivot_y = slot.pivotY;
+            }
+            pivot_y = 1 - pivot_y; // why would you do this to me
+            var source_left = -pivot_x * box.width;
+            var source_top = -pivot_y * box.height;
+            var source_right = source_left + box.width;
+            var source_bottom = source_top + box.height;
+            var left = source_left;
+            var top = source_top;
+            var right = source_right;
+            var bottom = source_bottom;
+            var slot_x = box.posX;
+            var slot_y = box.posY;
+            var slot_scale_x = box.scaleX;
+            var slot_scale_y = box.scaleY;
+            var slot_dir = box.angle;
+            var i_x = lengthdir_x(slot_scale_x, slot_dir);
+            var i_y = lengthdir_y(slot_scale_x, slot_dir);
+            var j_x = lengthdir_x(slot_scale_y, slot_dir - 90);
+            var j_y = lengthdir_y(slot_scale_y, slot_dir - 90);
+            box.aX = slot_x + left * i_x + top * j_x;
+            box.aY = slot_y + left * i_y + top * j_y;
+            box.bX = slot_x + right * i_x + top * j_x;
+            box.bY = slot_y + right * i_y + top * j_y;
+            box.cX = slot_x + right * i_x + bottom * j_x;
+            box.cY = slot_y + right * i_y + bottom * j_y;
+            box.dX = slot_x + left * i_x + bottom * j_x;
+            box.dY = slot_y + left * i_y + bottom * j_y;
+            break;
         case "point":
             __disarm_update_world_transform(slot, bone_parent);
             break;
@@ -657,6 +760,28 @@ function disarm_draw_debug(_arm, _offset_x=0, _offset_y=0, _scale_x=1, _scale_y=
             draw_line(x1, y1, x2, y2);
             draw_ellipse(x1 - _scale_x * wid, y1 - _scale_y * wid,
                     x1 + _scale_x * wid, y1 + _scale_y * wid, true);
+            break;
+        case "box":
+            var alpha = 1;
+            var col = c_purple;
+            var x1 = _offset_x + _scale_x * slot.aX;
+            var y1 = _offset_y + _scale_y * slot.aY;
+            var x2 = _offset_x + _scale_x * slot.bX;
+            var y2 = _offset_y + _scale_y * slot.bY;
+            var x3 = _offset_x + _scale_x * slot.cX;
+            var y3 = _offset_y + _scale_y * slot.cY;
+            var x4 = _offset_x + _scale_x * slot.dX;
+            var y4 = _offset_y + _scale_y * slot.dY;
+            var x5 = _offset_x + _scale_x * slot.posX;
+            var y5 = _offset_y + _scale_y * slot.posY;
+            draw_primitive_begin(pr_linestrip);
+            draw_vertex_colour(x1, y1, col, alpha);
+            draw_vertex_colour(x2, y2, col, alpha);
+            draw_vertex_colour(x3, y3, col, alpha);
+            draw_vertex_colour(x4, y4, col, alpha);
+            draw_vertex_colour(x1, y1, col, alpha);
+            draw_vertex_colour(x5, y5, c_fuchsia, alpha);
+            draw_primitive_end();
             break;
         }
     }
@@ -1153,6 +1278,7 @@ function __disarm_import_entity_object(_struct) {
     var f = undefined;
     switch (type) {
     case "bone": f = __disarm_import_entity_object_bone; break;
+    case "box": f = __disarm_import_entity_object_box; break;
     }
     var slot = f == undefined ? { } : f(_struct);
     slot.name = __disarm_struct_get_string_or_default(_struct, "name");
@@ -1172,6 +1298,25 @@ function __disarm_import_entity_object_bone(_struct) {
         angle : 0,
         scaleX : 1,
         scaleY : 1,
+        alpha : 1,
+        boneParent : -1,
+        invalidWorldTransform : true,
+    };
+}
+
+/// @desc Creates a new Disarm box object.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_object_box(_struct) {
+    return {
+        width : __disarm_struct_get_numeric_or_default(_struct, "w", 1),
+        height : __disarm_struct_get_numeric_or_default(_struct, "h", 1),
+        posX : 0,
+        posY : 0,
+        angle : 0,
+        scaleX : 1,
+        scaleY : 1,
+        defaultPivotX : __disarm_struct_get_numeric_or_default(_struct, "pivot_x"),
+        defaultPivotY : __disarm_struct_get_numeric_or_default(_struct, "pivot_y", 1),
         alpha : 1,
         boneParent : -1,
         invalidWorldTransform : true,
@@ -1259,6 +1404,7 @@ function __disarm_import_entity_animation_timeline(_struct) {
     case "bone": f = __disarm_import_entity_animation_timeline_keyframe_bone; break;
     case "sprite": f = __disarm_import_entity_animation_timeline_keyframe_sprite; break;
     case "point": f = __disarm_import_entity_animation_timeline_keyframe_point; break;
+    case "box": f = __disarm_import_entity_animation_timeline_keyframe_box; break;
     }
     return {
         name : __disarm_struct_get_string_or_default(_struct, "name"),
@@ -1324,6 +1470,23 @@ function __disarm_import_entity_animation_timeline_keyframe_point(_struct) {
     return key;
 }
 
+/// @desc Creates a new box keyframe for a Disarm animation.
+/// @param {struct} struct A struct containing the Spriter project information.
+function __disarm_import_entity_animation_timeline_keyframe_box(_struct) {
+    var key = __disarm_import_entity_animation_timeline_keyframe(_struct);
+    var slot = __disarm_struct_get_struct(_struct, "object");
+    key.posX = __disarm_struct_get_numeric_or_default(slot, "x");
+    key.posY = -__disarm_struct_get_numeric_or_default(slot, "y");
+    key.angle = __disarm_struct_get_numeric_or_default(slot, "angle");
+    key.scaleX = __disarm_struct_get_numeric_or_default(slot, "scale_x", 1);
+    key.scaleY = __disarm_struct_get_numeric_or_default(slot, "scale_y", 1);
+    key.useDefaultPivot = !variable_struct_exists(slot, "pivot_x") && !variable_struct_exists(slot, "pivot_y");
+    key.pivotX = __disarm_struct_get_numeric_or_default(slot, "pivot_x");
+    key.pivotY = __disarm_struct_get_numeric_or_default(slot, "pivot_y", 1);
+    key.alpha = __disarm_struct_get_numeric_or_default(slot, "a", 1);
+    return key;
+}
+
 /// @desc Returns the slot with this name, or creates a new slot if it doesn't exist.
 /// @param {string} name The name of the slot.
 /// @param {string} type The type of slot.
@@ -1347,6 +1510,7 @@ function __disarm_animation_get_slot_by_name_or_spawn_new(_name, _type, _slot_ta
     var slot = slot_data[1];
     slot.folder = -1;
     slot.file = -1;
+    slot.obj = undefined;
     slot.posX = 0;
     slot.posY = 0;
     slot.angle = 0;
@@ -1478,20 +1642,17 @@ function __disarm_update_world_transform(_child, _bone_parent) {
 /// @param {real} id The object index.
 function __disarm_update_world_transform_using_object_array(_info, _idx) {
     var slot = _info[_idx];
-    switch (slot.type) {
-    case "bone":
-        if (slot.invalidWorldTransform && slot.active) {
-            slot.invalidWorldTransform = false;
-            switch (slot.type) {
-            case "bone":
-                var idx_parent = slot.boneParent;
-                var bone_parent = idx_parent == -1 ? undefined :
-                        __disarm_update_world_transform_using_object_array(_info, idx_parent);
-                __disarm_update_world_transform(slot, bone_parent);
-                break;
-            }
+    
+    if (slot.invalidWorldTransform && slot.active) {
+        slot.invalidWorldTransform = false;
+        switch (slot.type) {
+        case "bone":
+            var idx_parent = slot.boneParent;
+            var bone_parent = idx_parent == -1 ? undefined :
+                    __disarm_update_world_transform_using_object_array(_info, idx_parent);
+            __disarm_update_world_transform(slot, bone_parent);
+            break;
         }
-        break;
     }
     return slot;
 }
