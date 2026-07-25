@@ -1,0 +1,7 @@
+{
+  "FolderOrderSettings": [],
+  "ResourceOrderSettings": [
+    {"name":"scr_disarm","order":1,"path":"scripts/scr_disarm/scr_disarm.yy",},
+    {"name":"rm_test","order":11,"path":"rooms/rm_test/rm_test.yy",},
+  ],
+}

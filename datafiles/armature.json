@@ -1,0 +1,55 @@
+{
+	"frames": {
+		"lower.png": {
+			"frame": {
+				"h": 43,
+				"w": 93,
+				"x": 1,
+				"y": 1
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 43,
+				"w": 93
+			},
+			"spriteSourceSize": {
+				"h": 43,
+				"w": 93,
+				"x": 0,
+				"y": 0
+			},
+			"trimmed": "true"
+		},
+		"upper.png": {
+			"frame": {
+				"h": 43,
+				"w": 93,
+				"x": 1,
+				"y": 46
+			},
+			"rotated": "false",
+			"sourceSize": {
+				"h": 43,
+				"w": 93
+			},
+			"spriteSourceSize": {
+				"h": 43,
+				"w": 93,
+				"x": 0,
+				"y": 0
+			},
+			"trimmed": "true"
+		}
+	},
+	"meta": {
+		"app": "Spriter",
+		"format": "RGBA8888",
+		"image": "armature.png",
+		"scale": 1,
+		"size": {
+			"h": 95,
+			"w": 95
+		},
+		"version": "r11"
+	}
+}
